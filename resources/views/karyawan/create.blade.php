@@ -17,7 +17,7 @@
 
                         <div class="mb-3">
                             <label for="nik" class="form-label">NIK <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('nik') is-invalid @enderror" id="nik" name="nik"
+                            <input type="number" class="form-control @error('nik') is-invalid @enderror" id="nik" name="nik"
                                 value="{{ old('nik') }}" required>
                             @error('nik')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -47,12 +47,32 @@
                             <select class="form-select @error('unit_kerja') is-invalid @enderror" id="unit_kerja"
                                 name="unit_kerja">
                                 <option value="">Pilih Unit Kerja</option>
-                                <option value="Teknis/Marketing/Keuangan/Umum" {{ old('unit_kerja') == 'Teknis/Marketing/Keuangan/Umum' ? 'selected' : '' }}>
-                                    Teknis/Marketing/Keuangan/Umum
+                                <option value="Teknis" {{ old('unit_kerja') == 'Teknis' ? 'selected' : '' }}>
+                                    Teknis
                                 </option>
-                                <option value="Dir/Man/Ass.Man/Staff/Supp.Staff" {{ old('unit_kerja') == 'Dir/Man/Ass.Man/Staff/Supp.Staff' ? 'selected' : '' }}>
-                                    Dir/Man/Ass.Man/Staff/Supp.Staff
+                                <option value="Marketing" {{ old('unit_kerja') == 'Marketing' ? 'selected' : '' }}>
+                                    Marketing
                                 </option>
+                                <option value="keuangan" {{ old('unit_kerja') == 'keuangan' ? 'selected' : '' }}>
+                                    keuangan
+                                </option>
+                                <option value="Umum" {{ old('unit_kerja') == 'Umum' ? 'selected' : '' }}>
+                                    Umum
+                                </option>
+
+                                <option value="Manager" {{ old('unit_kerja') == 'Manager' ? 'selected' : '' }}>
+                                    Manager
+                                </option>
+                                <option value="Assisten Manager" {{ old('unit_kerja') == 'Assisten Manager' ? 'selected' : '' }}>
+                                    Assisten Manager
+                                </option>
+                                <option value="Staff" {{ old('unit_kerja') == 'Staff' ? 'selected' : '' }}>
+                                    Staff
+                                </option>
+                                <option value="Support Staff" {{ old('unit_kerja') == 'Support Staff' ? 'selected' : '' }}>
+                                    Support Staff
+                                </option>
+
                             </select>
                             @error('unit_kerja')
                                 <div class="invalid-feedback">{{ $message }}</div>

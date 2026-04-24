@@ -12,6 +12,53 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
     <style>
+        .card {
+            background: #ffffff !important;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .dashboard-bg {
+            position: relative;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa, #eef2f7);
+        }
+
+        .dashboard-bg::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+
+            width: 500px;
+            height: 500px;
+
+            background: url('/img/waseco1.png') no-repeat center;
+            background-size: contain;
+
+            opacity: 0.12;
+            /* NAHKAN INI */
+            z-index: 0;
+        }
+
+        .dashboard-overlay {
+            background: transparent;
+        }
+
+
+        .dashboard-content {
+            position: relative;
+            z-index: 1;
+        }
+
         :root {
             --sidebar-width: 240px;
             --primary: #1a56a0;
@@ -108,6 +155,171 @@
         .alert {
             border-radius: 10px;
         }
+
+        /* ================= TABLE RESPONSIVE FIX ================= */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table td,
+        .table th {
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        /* Nama & Jabatan fleksibel */
+        .table td:nth-child(3),
+        .table td:nth-child(4) {
+            white-space: normal;
+            min-width: 140px;
+        }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+
+            .table th:nth-child(2),
+            .table td:nth-child(2),
+            .table th:nth-child(4),
+            .table td:nth-child(4) {
+                display: none;
+            }
+
+            .table td,
+            .table th {
+                font-size: 12px;
+            }
+
+            /* ================= GLASS EFFECT ================= */
+            .glass-card {
+                background: rgba(255, 255, 255, 0.4);
+                /* lebih jelas */
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+
+                border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.5);
+
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            }
+
+            .glass-card .card-header {
+                background: transparent;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .glass-table {
+                background: transparent;
+            }
+
+            .glass-table thead {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            .glass-table tbody tr {
+                background: rgba(255, 255, 255, 0.15);
+                transition: 0.2s;
+            }
+
+            .glass-table tbody tr:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            /* ================= FIX OVERLAY ================= */
+            .dashboard-overlay {
+                background: transparent;
+            }
+
+            /* ================= WATERMARK BACKGROUND ================= */
+            .dashboard-bg::before {
+                content: "";
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+
+                width: 500px;
+                height: 500px;
+
+                background: url('/img/waseco1.png') no-repeat center;
+                background-size: contain;
+
+                opacity: 0.12;
+                z-index: 0;
+            }
+
+            /* ================= GLASS EFFECT (DESKTOP + MOBILE) ================= */
+            .glass-card {
+                background: rgba(255, 255, 255, 0.35) !important;
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+
+                border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.4);
+
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            }
+
+            /* HEADER CARD */
+            .glass-card .card-header {
+                background: transparent !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            }
+
+            /* TABLE */
+            .glass-table {
+                background: transparent !important;
+            }
+
+            .glass-table thead {
+                background: rgba(255, 255, 255, 0.35);
+            }
+
+            .glass-table tbody tr {
+                background: rgba(255, 255, 255, 0.2);
+                transition: 0.2s;
+            }
+
+            .glass-table tbody tr:hover {
+                background: rgba(255, 255, 255, 0.35);
+            }
+
+            /* ================= TABLE RESPONSIVE ================= */
+            .table-responsive {
+                overflow-x: auto;
+            }
+
+            .table td,
+            .table th {
+                white-space: nowrap;
+                font-size: 13px;
+            }
+
+            .table td:nth-child(3),
+            .table td:nth-child(4) {
+                white-space: normal;
+                min-width: 140px;
+            }
+
+            /* ================= MOBILE ================= */
+            @media (max-width: 768px) {
+
+                .table th:nth-child(2),
+                .table td:nth-child(2),
+                .table th:nth-child(4),
+                .table td:nth-child(4) {
+                    display: none;
+                }
+
+                .table td,
+                .table th {
+                    font-size: 12px;
+                }
+
+                .glass-card {
+                    backdrop-filter: blur(10px);
+                }
+            }
+        }
     </style>
 
     @yield('styles')
@@ -118,7 +330,7 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="sidebar-logo">
-            <h4>Fardian Ganteng</h4>
+            <h4>PT.Waseco TIRTA</h4>
             <small>Sistem Penilaian Karyawan</small>
         </div>
 
