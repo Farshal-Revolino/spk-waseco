@@ -29,7 +29,7 @@ class ProfileMatchingService
 
             HasilPerhitungan::where('periode_id', $this->periodeId)->delete();
 
-            $karyawanList = Karyawan::whereHas('penilaian', function($query) {
+            $karyawanList = Karyawan::whereHas('penilaian', function ($query) {
                 $query->where('periode_id', $this->periodeId);
             })->get();
 
@@ -78,13 +78,17 @@ class ProfileMatchingService
 
         foreach ($penilaianList as $penilaian) {
             $profilIdeal = ProfilIdeal::where('sub_kriteria_id', $penilaian->sub_kriteria_id)->first();
+
             $nilaiIdeal = $profilIdeal ? $profilIdeal->nilai_ideal : 0;
             $gap = $penilaian->nilai - $nilaiIdeal;
             $bobot = BobotGap::getBobotBySelisih($gap);
 
             HasilGap::updateOrCreate(
                 ['penilaian_id' => $penilaian->id],
-                ['gap' => $gap, 'bobot' => $bobot]
+                [
+                    'gap' => $gap,
+                    'bobot' => $bobot
+                ]
             );
         }
     }
@@ -109,6 +113,7 @@ class ProfileMatchingService
                 $subKriteria = $kriteria->subKriteria
                     ->where('id', $penilaian->sub_kriteria_id)
                     ->first();
+
                 $hasilGap = HasilGap::where('penilaian_id', $penilaian->id)->first();
 
                 if ($hasilGap && $subKriteria) {
@@ -120,16 +125,37 @@ class ProfileMatchingService
                 }
             }
 
-            $ncf = count($coreValues) > 0
-                ? array_sum($coreValues) / count($coreValues)
+            $jumlahCore = count($coreValues);
+            $jumlahSecondary = count($secondaryValues);
+
+            $ncf = $jumlahCore > 0
+                ? array_sum($coreValues) / $jumlahCore
                 : 0;
 
-            $nsf = count($secondaryValues) > 0
-                ? array_sum($secondaryValues) / count($secondaryValues)
+            $nsf = $jumlahSecondary > 0
+                ? array_sum($secondaryValues) / $jumlahSecondary
                 : 0;
 
-            $nilaiKriteria = ($this->coreFactor / 100 * $ncf) +
-                             ($this->secondaryFactor / 100 * $nsf);
+            /*
+             * Jika kriteria memiliki Core dan Secondary:
+             * Nilai = 60% NCF + 40% NSF
+             *
+             * Jika kriteria hanya memiliki Core:
+             * Nilai = NCF
+             *
+             * Jika kriteria hanya memiliki Secondary:
+             * Nilai = NSF
+             */
+            if ($jumlahCore > 0 && $jumlahSecondary > 0) {
+                $nilaiKriteria = ($this->coreFactor / 100 * $ncf) +
+                                 ($this->secondaryFactor / 100 * $nsf);
+            } elseif ($jumlahCore > 0 && $jumlahSecondary == 0) {
+                $nilaiKriteria = $ncf;
+            } elseif ($jumlahCore == 0 && $jumlahSecondary > 0) {
+                $nilaiKriteria = $nsf;
+            } else {
+                $nilaiKriteria = 0;
+            }
 
             $hasil[$kriteria->kode] = [
                 'nama'  => $kriteria->nama,
@@ -145,11 +171,24 @@ class ProfileMatchingService
 
     protected function calculateNilaiTotal($hasilKriteria)
     {
-        $nilaiTotal = 0;
+        /*
+         * Nilai setiap aspek berada pada skala maksimal 5.
+         * Bobot kriteria:
+         * K1 = 35%, K2 = 25%, K3 = 25%, K4 = 15%.
+         *
+         * Nilai akhir Profile Matching dikonversi
+         * ke skala maksimal perusahaan yaitu 320.
+         */
+
+        $nilaiAkhirProfile = 0;
+
         foreach ($hasilKriteria as $data) {
-            $nilaiTotal += ($data['nilai'] * $data['bobot']);
+            $nilaiAkhirProfile += ($data['nilai'] * ($data['bobot'] / 100));
         }
-        return round($nilaiTotal, 2);
+
+        $skorAkhir = ($nilaiAkhirProfile / 5) * 320;
+
+        return round($skorAkhir, 2);
     }
 
     protected function saveHasilPerhitungan($karyawanId, $hasilKriteria, $nilaiTotal)
@@ -203,6 +242,7 @@ class ProfileMatchingService
             ->get();
 
         $ranking = 1;
+
         foreach ($hasilList as $hasil) {
             $hasil->ranking = $ranking++;
             $hasil->save();
@@ -212,13 +252,18 @@ class ProfileMatchingService
     public function getDetailPerhitungan($karyawanId)
     {
         $karyawan = Karyawan::find($karyawanId);
-        if (!$karyawan) return null;
+
+        if (!$karyawan) {
+            return null;
+        }
 
         $hasil = HasilPerhitungan::where('karyawan_id', $karyawanId)
             ->where('periode_id', $this->periodeId)
             ->first();
 
-        if (!$hasil) return null;
+        if (!$hasil) {
+            return null;
+        }
 
         $kriteriaList = Kriteria::with(['subKriteria.profilIdeal'])
             ->orderBy('urutan')
@@ -236,6 +281,7 @@ class ProfileMatchingService
                 ->get();
 
             $detailSub = [];
+
             foreach ($penilaianList as $penilaian) {
                 $profilIdeal = $penilaian->subKriteria->profilIdeal;
                 $hasilGap    = $penilaian->hasilGap;

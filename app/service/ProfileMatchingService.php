@@ -1,6 +1,6 @@
 <?php
 
-namespace App\service;
+namespace App\Services;
 
 use App\Models\Karyawan;
 use App\Models\Kriteria;
