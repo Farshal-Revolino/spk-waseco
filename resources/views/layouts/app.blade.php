@@ -487,6 +487,17 @@
 
 <body>
 
+    @php
+        $user = Auth::user();
+        $role = $user->role ?? null;
+
+        $roleLabel = [
+            'admin' => 'Admin',
+            'hrd' => 'HRD',
+            'direktur' => 'Direktur Utama',
+        ][$role] ?? 'Pengguna Sistem';
+    @endphp
+
     {{-- SIDEBAR --}}
     <aside class="app-sidebar" id="appSidebar">
         <div class="sidebar-brand">
@@ -500,40 +511,66 @@
             </div>
         </div>
 
-        <div class="sidebar-section">Menu Utama</div>
+        <div class="sidebar-section">
+            {{ $role === 'direktur' ? 'Menu Direktur' : 'Menu Utama' }}
+        </div>
 
         <ul class="sidebar-menu">
-            <li>
-                <a href="{{ route('dashboard') }}"
-                    class="sidebar-link {{ request()->routeIs('dashboard') || request()->is('dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-grid-1x2-fill"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
 
-            <li>
-                <a href="{{ route('karyawan.index') }}"
-                    class="sidebar-link {{ request()->routeIs('karyawan.*') || request()->is('karyawan*') ? 'active' : '' }}">
-                    <i class="bi bi-people-fill"></i>
-                    <span>Data Karyawan</span>
-                </a>
-            </li>
+            {{-- MENU ADMIN / HRD --}}
+            @if(in_array($role, ['admin', 'hrd']))
+                <li>
+                    <a href="{{ route('dashboard') }}"
+                        class="sidebar-link {{ request()->routeIs('dashboard') || request()->is('dashboard') ? 'active' : '' }}">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
 
-            <li>
-                <a href="{{ route('penilaian.index') }}"
-                    class="sidebar-link {{ request()->routeIs('penilaian.*') || request()->is('penilaian*') ? 'active' : '' }}">
-                    <i class="bi bi-clipboard-check-fill"></i>
-                    <span>Input Penilaian</span>
-                </a>
-            </li>
+                <li>
+                    <a href="{{ route('karyawan.index') }}"
+                        class="sidebar-link {{ request()->routeIs('karyawan.*') || request()->is('karyawan*') ? 'active' : '' }}">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Data Karyawan</span>
+                    </a>
+                </li>
 
-            <li>
-                <a href="{{ route('hasil.index') }}"
-                    class="sidebar-link {{ request()->routeIs('hasil.*') || request()->is('hasil*') ? 'active' : '' }}">
-                    <i class="bi bi-trophy-fill"></i>
-                    <span>Perhitungan & Hasil</span>
-                </a>
-            </li>
+                <li>
+                    <a href="{{ route('penilaian.index') }}"
+                        class="sidebar-link {{ request()->routeIs('penilaian.*') || request()->is('penilaian*') ? 'active' : '' }}">
+                        <i class="bi bi-clipboard-check-fill"></i>
+                        <span>Input Penilaian</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('hasil.index') }}"
+                        class="sidebar-link {{ request()->routeIs('hasil.*') || request()->is('hasil*') ? 'active' : '' }}">
+                        <i class="bi bi-trophy-fill"></i>
+                        <span>Perhitungan & Hasil</span>
+                    </a>
+                </li>
+            @endif
+
+            {{-- MENU DIREKTUR --}}
+            @if($role === 'direktur')
+                <li>
+                    <a href="{{ route('direktur.dashboard') }}"
+                        class="sidebar-link {{ request()->routeIs('direktur.dashboard') || request()->is('direktur/dashboard') ? 'active' : '' }}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard Direktur</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('hasil.index') }}"
+                        class="sidebar-link {{ request()->routeIs('hasil.*') || request()->is('hasil*') ? 'active' : '' }}">
+                        <i class="bi bi-trophy-fill"></i>
+                        <span>Hasil Ranking</span>
+                    </a>
+                </li>
+            @endif
+
         </ul>
 
         <div class="sidebar-section">Akun</div>
@@ -545,8 +582,8 @@
                 </div>
 
                 <div>
-                    <p class="user-name">{{ Auth::user()->name ?? 'Direktur Utama' }}</p>
-                    <p class="user-role">Pengguna Sistem</p>
+                    <p class="user-name">{{ $user->name ?? 'Pengguna' }}</p>
+                    <p class="user-role">{{ $roleLabel }}</p>
                 </div>
             </div>
 
@@ -583,8 +620,8 @@
                 </div>
 
                 <div>
-                    <p class="topbar-user-name">{{ Auth::user()->name ?? 'Direktur Utama' }}</p>
-                    <p class="topbar-user-role">Pengguna Sistem</p>
+                    <p class="topbar-user-name">{{ $user->name ?? 'Pengguna' }}</p>
+                    <p class="topbar-user-role">{{ $roleLabel }}</p>
                 </div>
             </div>
         </div>

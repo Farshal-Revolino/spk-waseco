@@ -20,9 +20,14 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials, $request->filled('remember'))) {
+        if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('dashboard');
+
+            if (Auth::user()->role === 'direktur') {
+                return redirect()->route('direktur.dashboard');
+            }
+
+            return redirect()->route('dashboard');
         }
 
         return back()->withErrors([
@@ -33,8 +38,10 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/login');
     }
 }

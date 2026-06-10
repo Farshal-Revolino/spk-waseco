@@ -52,7 +52,8 @@
 
         .filter-card,
         .main-card,
-        .stat-card {
+        .stat-card,
+        .validasi-card {
             border: none;
             border-radius: 20px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, .06);
@@ -101,10 +102,6 @@
 
         .bg-purple {
             background: linear-gradient(135deg, #6f42c1, #b197fc);
-        }
-
-        .bg-red {
-            background: linear-gradient(135deg, #dc3545, #ff8787);
         }
 
         .winner-card {
@@ -217,12 +214,26 @@
             font-size: 56px;
             color: #adb5bd;
         }
+
+        .validasi-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 25px;
+            flex-shrink: 0;
+        }
     </style>
 @endsection
 
 @section('content')
 
     @php
+        $role = Auth::user()->role ?? null;
+
         $hasilCollection = collect($hasilList)->sortBy('ranking')->values();
         $totalHasil = $hasilCollection->count();
         $topHasil = $hasilCollection->first();
@@ -233,6 +244,20 @@
         $jumlahD = $hasilCollection->where('klasifikasi', 'D')->count();
 
         $nilaiTertinggi = $topHasil ? $topHasil->nilai_total : 0;
+
+        $status = $statusValidasi ?? 'menunggu';
+
+        $badgeValidasi = [
+            'menunggu' => 'warning',
+            'disetujui' => 'success',
+            'ditolak' => 'danger',
+        ][$status] ?? 'secondary';
+
+        $labelValidasi = [
+            'menunggu' => 'Menunggu Validasi',
+            'disetujui' => 'Disetujui',
+            'ditolak' => 'Ditolak',
+        ][$status] ?? 'Tidak Diketahui';
     @endphp
 
     <div class="page-hero">
@@ -281,15 +306,18 @@
 
                 <div class="col-lg-7 text-lg-end">
                     @if($periode)
-                        <form action="{{ route('hasil.calculate') }}" method="POST" class="d-inline">
-                            @csrf
-                            <input type="hidden" name="periode_id" value="{{ $periode->id }}">
 
-                            <button type="submit" class="btn btn-success"
-                                onclick="return confirm('Proses perhitungan akan menghapus hasil sebelumnya. Lanjutkan?')">
-                                <i class="bi bi-calculator me-1"></i>Proses Perhitungan
-                            </button>
-                        </form>
+                        @if(in_array($role, ['admin', 'hrd']))
+                            <form action="{{ route('hasil.calculate') }}" method="POST" class="d-inline">
+                                @csrf
+                                <input type="hidden" name="periode_id" value="{{ $periode->id }}">
+
+                                <button type="submit" class="btn btn-success"
+                                    onclick="return confirm('Proses perhitungan akan menghapus hasil sebelumnya. Lanjutkan?')">
+                                    <i class="bi bi-calculator me-1"></i>Proses Perhitungan
+                                </button>
+                            </form>
+                        @endif
 
                         @if($totalHasil > 0)
                             <a href="{{ route('hasil.export-pdf') }}?periode_id={{ $periode->id }}" class="btn btn-danger ms-2"
@@ -297,11 +325,65 @@
                                 <i class="bi bi-file-earmark-pdf-fill me-1"></i>Export PDF
                             </a>
                         @endif
+
                     @endif
                 </div>
             </div>
         </div>
     </div>
+
+    @if($periode)
+        <div class="card validasi-card mb-4">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="validasi-icon bg-{{ $badgeValidasi }}">
+                        @if($status === 'disetujui')
+                            <i class="bi bi-check-circle-fill"></i>
+                        @elseif($status === 'ditolak')
+                            <i class="bi bi-x-circle-fill"></i>
+                        @else
+                            <i class="bi bi-hourglass-split"></i>
+                        @endif
+                    </div>
+
+                    <div>
+                        <div class="text-muted small">Status Validasi Laporan</div>
+                        <h5 class="fw-bold mb-1">
+                            {{ $periode->nama }} ({{ $periode->tahun }})
+                        </h5>
+
+                        @if($validasi && $validasi->catatan_validasi)
+                            <div class="text-muted small">
+                                Catatan: {{ $validasi->catatan_validasi }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="text-md-end">
+                    <span class="badge bg-{{ $badgeValidasi }} fs-6 px-3 py-2">
+                        {{ $labelValidasi }}
+                    </span>
+
+                    @if($validasi)
+                        <div class="text-muted small mt-2">
+                            Divalidasi oleh: {{ $validasi->user->name ?? '-' }} <br>
+                            Tanggal:
+                            {{ $validasi->tanggal_validasi ? \Carbon\Carbon::parse($validasi->tanggal_validasi)->format('d M Y H:i') : '-' }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        @if($status === 'ditolak' && in_array($role, ['admin', 'hrd']))
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Laporan hasil penilaian ditolak oleh Direktur Utama. HRD/Admin perlu memeriksa kembali data penilaian dan melakukan
+                proses perhitungan ulang.
+            </div>
+        @endif
+    @endif
 
     @if($periode && $totalHasil > 0)
 
@@ -433,11 +515,11 @@
                                 <tr>
                                     <td class="text-center" data-order="{{ $hasil->ranking }}">
                                         <span class="rank-badge
-                                                        @if($hasil->ranking == 1) bg-warning text-dark
-                                                        @elseif($hasil->ranking == 2) bg-secondary text-white
-                                                        @elseif($hasil->ranking == 3) bg-danger text-white
-                                                        @else bg-light text-dark
-                                                        @endif">
+                                                                    @if($hasil->ranking == 1) bg-warning text-dark
+                                                                    @elseif($hasil->ranking == 2) bg-secondary text-white
+                                                                    @elseif($hasil->ranking == 3) bg-danger text-white
+                                                                    @else bg-light text-dark
+                                                                    @endif">
                                             @if($hasil->ranking <= 3)
                                                 <i class="bi bi-trophy-fill me-1"></i>
                                             @endif
@@ -457,9 +539,7 @@
                                         </div>
                                     </td>
 
-                                    <td>
-                                        {{ $hasil->karyawan->jabatan ?? '-' }}
-                                    </td>
+                                    <td>{{ $hasil->karyawan->jabatan ?? '-' }}</td>
 
                                     <td class="text-center">
                                         <span class="aspect-pill">
@@ -556,16 +636,23 @@
             <div class="empty-state">
                 <i class="bi bi-calculator"></i>
                 <h4 class="mt-3">Belum Ada Hasil Perhitungan</h4>
-                <p class="text-muted">Silakan proses perhitungan terlebih dahulu untuk melihat hasil ranking.</p>
 
-                <form action="{{ route('hasil.calculate') }}" method="POST" class="d-inline">
-                    @csrf
-                    <input type="hidden" name="periode_id" value="{{ $periode->id }}">
+                @if(in_array($role, ['admin', 'hrd']))
+                    <p class="text-muted">Silakan proses perhitungan terlebih dahulu untuk melihat hasil ranking.</p>
 
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-calculator me-1"></i>Mulai Perhitungan
-                    </button>
-                </form>
+                    <form action="{{ route('hasil.calculate') }}" method="POST" class="d-inline">
+                        @csrf
+                        <input type="hidden" name="periode_id" value="{{ $periode->id }}">
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-calculator me-1"></i>Mulai Perhitungan
+                        </button>
+                    </form>
+                @else
+                    <p class="text-muted">
+                        Hasil perhitungan belum tersedia. HRD/Admin perlu melakukan proses perhitungan terlebih dahulu.
+                    </p>
+                @endif
             </div>
         </div>
 
