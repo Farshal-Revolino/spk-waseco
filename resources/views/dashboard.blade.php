@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
@@ -302,17 +303,23 @@
                                     </thead>
 
                                     <tbody>
+                                    <tbody>
                                         @foreach($topKaryawan as $hasil)
                                             <tr>
                                                 <td>
-                                                    <span class="badge rank-badge
-                                                                                                    @if($hasil->ranking == 1) bg-warning text-dark
-                                                                                                    @elseif($hasil->ranking == 2) bg-secondary
-                                                                                                    @elseif($hasil->ranking == 3) bg-danger
-                                                                                                    @else bg-light text-dark
-                                                                                                    @endif">
-                                                        #{{ $hasil->ranking }}
-                                                    </span>
+                                                    @if($periodeAktif->status_validasi == 'divalidasi')
+                                                        <span
+                                                            class="badge rank-badge
+                                                                                                                                                                                        @if($hasil->ranking == 1) bg-warning text-dark
+                                                                                                                                                                                        @elseif($hasil->ranking == 2) bg-secondary
+                                                                                                                                                                                        @elseif($hasil->ranking == 3) bg-danger
+                                                                                                                                                                                        @else bg-light text-dark
+                                                                                                                                                                                        @endif">
+                                                            #{{ $hasil->ranking }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-light text-muted"><i class="bi bi-lock-fill"></i></span>
+                                                    @endif
                                                 </td>
 
                                                 <td>
@@ -325,13 +332,22 @@
                                                 </td>
 
                                                 <td class="text-end fw-bold text-primary">
-                                                    {{ number_format($hasil->nilai_total, 2) }}
+                                                    @if($periodeAktif->status_validasi == 'divalidasi')
+                                                        {{ number_format($hasil->nilai_total, 2) }}
+                                                    @else
+                                                        <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">Menunggu
+                                                            Validasi</span>
+                                                    @endif
                                                 </td>
 
                                                 <td class="text-center">
-                                                    <span class="badge bg-{{ $hasil->klasifikasi_badge }}">
-                                                        {{ $hasil->klasifikasi }}
-                                                    </span>
+                                                    @if($periodeAktif->status_validasi == 'divalidasi')
+                                                        <span class="badge bg-{{ $hasil->klasifikasi_badge }}">
+                                                            {{ $hasil->klasifikasi }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -399,25 +415,37 @@
                                 </a>
                             </div>
 
-                            <div class="col-12">
-                                @if($periodeAktif && count($topKaryawan) > 0)
-                                    <a href="{{ route('hasil.export-pdf') }}?periode_id={{ $periodeAktif->id }}"
-                                        class="quick-card" target="_blank">
-                                        <div class="quick-icon bg-purple">
-                                            <i class="bi bi-file-earmark-pdf"></i>
-                                        </div>
-                                        <div class="quick-title">Cetak Laporan</div>
-                                        <p class="quick-desc">Cetak laporan hasil penilaian dalam format PDF.</p>
-                                    </a>
-                                @else
-                                    <div class="quick-card opacity-50">
-                                        <div class="quick-icon bg-purple">
-                                            <i class="bi bi-file-earmark-pdf"></i>
-                                        </div>
-                                        <div class="quick-title">Cetak Laporan</div>
-                                        <p class="quick-desc">Belum tersedia karena hasil perhitungan belum ada.</p>
-                                    </div>
-                                @endif
+             {{-- Ganti bagian tombol cetak laporan dengan kode ini saja --}}
+<div class="col-12">
+    @if($periodeAktif && count($topKaryawan) > 0)
+        @if($periodeAktif->status_validasi == 'divalidasi')
+            <a href="{{ route('hasil.export-pdf') }}?periode_id={{ $periodeAktif->id }}" 
+               class="quick-card" target="_blank">
+                <div class="quick-icon bg-purple">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </div>
+                <div class="quick-title">Cetak Laporan</div>
+                <p class="quick-desc">Cetak laporan hasil penilaian dalam format PDF.</p>
+            </a>
+        @else
+            <div class="quick-card opacity-50">
+                <div class="quick-icon bg-warning">
+                    <i class="bi bi-lock-fill"></i>
+                </div>
+                <div class="quick-title">Cetak Laporan</div>
+                <p class="quick-desc text-warning">Menunggu validasi Direktur.</p>
+            </div>
+        @endif
+    @else
+        <div class="quick-card opacity-50">
+            <div class="quick-icon bg-purple">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </div>
+            <div class="quick-title">Cetak Laporan</div>
+            <p class="quick-desc">Belum tersedia.</p>
+        </div>
+    @endif
+</div>
                             </div>
 
                         </div>

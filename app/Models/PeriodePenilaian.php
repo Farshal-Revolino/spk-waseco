@@ -8,8 +8,13 @@ class PeriodePenilaian extends Model
 {
     protected $table = 'periode_penilaian';
 
+    // Bersihkan komentar di tengah array
     protected $fillable = [
-        'nama', 'tahun', 'triwulan', 'tanggal_mulai', 'tanggal_selesai', 'status'
+        'nama_periode', 
+        'tanggal_mulai', 
+        'tanggal_selesai',
+        'status', // Pastikan kolom status yang Anda pakai di Controller ada di sini
+        'status_validasi',
     ];
 
     protected $casts = [

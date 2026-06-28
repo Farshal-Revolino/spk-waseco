@@ -4,28 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\Karyawan;
 use App\Models\Kriteria;
+use App\Models\Penilaian;
 use App\Models\PeriodePenilaian;
 use App\Models\HasilPerhitungan;
-use App\Models\Penilaian;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // 1. Ambil Periode Aktif
         $periodeAktif = PeriodePenilaian::where('status', 'aktif')->first();
 
-        $totalKaryawan = Karyawan::where('status', 'aktif')->count();
+        // 2. Siapkan data statistik untuk kartu (card)
+        $totalKaryawan = Karyawan::count();
         $totalKriteria = Kriteria::count();
         $totalPeriode = PeriodePenilaian::count();
-        
-        $totalPenilaian = 0;
-        if ($periodeAktif) {
-            $totalPenilaian = Penilaian::where('periode_id', $periodeAktif->id)
-                ->distinct('karyawan_id')
-                ->count('karyawan_id');
-        }
+        $totalPenilaian = Penilaian::count();
 
-        $topKaryawan = [];
+        // 3. Ambil data Top 5 Karyawan (hanya jika ada periode aktif)
+        $topKaryawan = collect();
         if ($periodeAktif) {
             $topKaryawan = HasilPerhitungan::with('karyawan')
                 ->where('periode_id', $periodeAktif->id)
@@ -34,34 +32,14 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        $chartKlasifikasi = [
-            'labels' => ['A - Baik Sekali', 'B - Baik', 'C - Cukup', 'D - Kurang'],
-            'data' => [0, 0, 0, 0]
-        ];
-
-        if ($periodeAktif) {
-            $klasifikasiCount = HasilPerhitungan::where('periode_id', $periodeAktif->id)
-                ->selectRaw('klasifikasi, count(*) as total')
-                ->groupBy('klasifikasi')
-                ->get()
-                ->pluck('total', 'klasifikasi');
-
-            $chartKlasifikasi['data'] = [
-                $klasifikasiCount['A'] ?? 0,
-                $klasifikasiCount['B'] ?? 0,
-                $klasifikasiCount['C'] ?? 0,
-                $klasifikasiCount['D'] ?? 0
-            ];
-        }
-
+        // 4. Kirim semua variabel ke view
         return view('dashboard', compact(
-            'totalKaryawan',
-            'totalKriteria',
-            'totalPeriode',
-            'totalPenilaian',
-            'topKaryawan',
-            'periodeAktif',
-            'chartKlasifikasi'
+            'periodeAktif', 
+            'totalKaryawan', 
+            'totalKriteria', 
+            'totalPeriode', 
+            'totalPenilaian', 
+            'topKaryawan'
         ));
     }
 }

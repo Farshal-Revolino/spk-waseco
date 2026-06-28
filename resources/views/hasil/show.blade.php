@@ -285,241 +285,267 @@
 
 @section('content')
 
-    <div class="page-hero">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="hero-icon">
-                        <i class="bi bi-bar-chart-line-fill"></i>
-                    </div>
-                    <div>
-                        <h4>Detail Perhitungan</h4>
-                        <p>Rincian hasil perhitungan metode Profile Matching untuk karyawan terpilih.</p>
-                    </div>
+    {{-- Ambil role user login dan status validasi laporan dari variabel controller --}}
+    @php
+        $userRole = Auth::user()->role ?? null;
+        // Pastikan variabel $statusValidasi dikirim dari controller Anda (nilai default: 'menunggu')
+        $statusReport = $statusValidasi ?? 'menunggu'; 
+    @endphp
+
+    {{-- KONDISI BLOKIR: Jika user ber-role hrd/admin DAN statusnya belum disetujui --}}
+    @if(in_array($userRole, ['hrd', 'admin']) && in_array($statusReport, ['menunggu', 'ditolak']))
+
+        <div class="card info-card mt-2">
+            <div class="card-body p-5 text-center">
+                <div class="mb-4">
+                    <i class="bi bi-shield-lock text-danger" style="font-size: 4.5rem;"></i>
+                </div>
+                <h3 class="fw-bold text-dark">Akses Detail Dibatasi</h3>
+                <p class="text-muted mx-auto" style="max-width: 500px;">
+                    Maaf, rincian perhitungan Profile Matching untuk periode ini belum dapat diakses oleh HRD/Admin karena
+                    laporan berstatus <strong class="text-capitalize">{{ $statusReport }}</strong> oleh Direktur.
+                </p>
+                <div class="mt-4">
+                    <a href="{{ route('hasil.index') }}?periode_id={{ $hasil->periode_id }}" class="btn btn-primary px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Kembali ke Daftar Hasil
+                    </a>
                 </div>
             </div>
-
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a href="{{ route('hasil.index') }}?periode_id={{ $hasil->periode_id }}" class="btn btn-light">
-                    <i class="bi bi-arrow-left me-2"></i>Kembali
-                </a>
-            </div>
         </div>
-    </div>
 
-    {{-- INFO KARYAWAN --}}
-    <div class="card info-card mb-4">
-        <div class="card-body p-4">
-            <div class="row align-items-center g-3">
-                <div class="col-lg-8">
+    @else
+        {{-- KONDISI DISETUJUI / AKSES DIREKTUR (KODE EXISTING) --}}
+
+        <div class="page-hero">
+            <div class="row align-items-center">
+                <div class="col-md-8">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="employee-avatar">
-                            <i class="bi bi-person-fill"></i>
+                        <div class="hero-icon">
+                            <i class="bi bi-bar-chart-line-fill"></i>
                         </div>
-
                         <div>
-                            <h4 class="employee-name">{{ $karyawan->nama }}</h4>
-                            <p class="employee-detail">
-                                <i class="bi bi-credit-card me-1"></i>{{ $karyawan->nik }}
-                                &nbsp;|&nbsp;
-                                <i class="bi bi-briefcase me-1"></i>{{ $karyawan->jabatan ?? '-' }}
-                                &nbsp;|&nbsp;
-                                <i class="bi bi-building me-1"></i>{{ $karyawan->unit_kerja ?? '-' }}
-                            </p>
+                            <h4>Detail Perhitungan</h4>
+                            <p>Rincian hasil perhitungan metode Profile Matching untuk karyawan terpilih.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-4 text-lg-end">
-                    <div class="rank-box d-inline-block">
-                        <div class="rank-label">Ranking</div>
-                        <div class="rank-number">#{{ $hasil->ranking }}</div>
-                        <span class="badge bg-{{ $hasil->klasifikasi_badge }}">
-                            Kelas {{ $hasil->klasifikasi }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- NILAI TOTAL & PER ASPEK --}}
-    <div class="row g-3 mb-4">
-        <div class="col-lg-3">
-            <div class="score-card">
-                <div class="card-body d-flex flex-column justify-content-center text-center p-4">
-                    <div class="score-label">Nilai Total</div>
-
-                    <div class="score-value">
-                        {{ number_format($hasil->nilai_total, 2) }}
-                    </div>
-
-                    <div class="score-max">dari maksimal 320</div>
-
-                    @php
-                        $persentaseNilai = ($hasil->nilai_total / 320) * 100;
-                        $persentaseNilai = $persentaseNilai > 100 ? 100 : $persentaseNilai;
-                    @endphp
-
-                    <div class="score-progress">
-                        <div class="score-progress-bar" style="width: {{ $persentaseNilai }}%"></div>
-                    </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{{ route('hasil.index') }}?periode_id={{ $hasil->periode_id }}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-2"></i>Kembali
+                    </a>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-9">
-            <div class="row g-3">
-                <div class="col-md-6 col-xl-3">
-                    <div class="card aspect-card">
-                        <div class="card-body">
-                            <div class="aspect-icon bg-blue">
-                                <i class="bi bi-tools"></i>
+        {{-- INFO KARYAWAN --}}
+        <div class="card info-card mb-4">
+            <div class="card-body p-4">
+                <div class="row align-items-center g-3">
+                    <div class="col-lg-8">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="employee-avatar">
+                                <i class="bi bi-person-fill"></i>
                             </div>
-                            <div class="aspect-title">Teknis</div>
-                            <div class="aspect-value">{{ number_format($hasil->nilai_teknis, 2) }}</div>
-                            <p class="aspect-meta">Bobot 35%</p>
-                            <p class="aspect-meta">NCF: {{ $hasil->ncf_teknis }} | NSF: {{ $hasil->nsf_teknis }}</p>
+
+                            <div>
+                                <h4 class="employee-name">{{ $karyawan->nama }}</h4>
+                                <p class="employee-detail">
+                                    <i class="bi bi-credit-card me-1"></i>{{ $karyawan->nik }}
+                                    &nbsp;|&nbsp;
+                                    <i class="bi bi-briefcase me-1"></i>{{ $karyawan->jabatan ?? '-' }}
+                                    &nbsp;|&nbsp;
+                                    <i class="bi bi-building me-1"></i>{{ $karyawan->unit_kerja ?? '-' }}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-md-6 col-xl-3">
-                    <div class="card aspect-card">
-                        <div class="card-body">
-                            <div class="aspect-icon bg-green">
-                                <i class="bi bi-people"></i>
-                            </div>
-                            <div class="aspect-title">Non Teknis</div>
-                            <div class="aspect-value">{{ number_format($hasil->nilai_non_teknis, 2) }}</div>
-                            <p class="aspect-meta">Bobot 25%</p>
-                            <p class="aspect-meta">NCF: {{ $hasil->ncf_non_teknis }} | NSF: {{ $hasil->nsf_non_teknis }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card aspect-card">
-                        <div class="card-body">
-                            <div class="aspect-icon bg-orange">
-                                <i class="bi bi-person-check"></i>
-                            </div>
-                            <div class="aspect-title">Kepribadian</div>
-                            <div class="aspect-value">{{ number_format($hasil->nilai_kepribadian, 2) }}</div>
-                            <p class="aspect-meta">Bobot 25%</p>
-                            <p class="aspect-meta">NCF: {{ $hasil->ncf_kepribadian }} | NSF: {{ $hasil->nsf_kepribadian }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card aspect-card">
-                        <div class="card-body">
-                            <div class="aspect-icon bg-purple">
-                                <i class="bi bi-diagram-3"></i>
-                            </div>
-                            <div class="aspect-title">Kepemimpinan</div>
-                            <div class="aspect-value">{{ number_format($hasil->nilai_kepemimpinan, 2) }}</div>
-                            <p class="aspect-meta">Bobot 15%</p>
-                            <p class="aspect-meta">NCF: {{ $hasil->ncf_kepemimpinan }} | NSF: {{ $hasil->nsf_kepemimpinan }}
-                            </p>
+                    <div class="col-lg-4 text-lg-end">
+                        <div class="rank-box d-inline-block">
+                            <div class="rank-label">Ranking</div>
+                            <div class="rank-number">#{{ $hasil->ranking }}</div>
+                            <span class="badge bg-{{ $hasil->klasifikasi_badge }}">
+                                Kelas {{ $hasil->klasifikasi }}
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- DETAIL PER KRITERIA --}}
-    @foreach($detail_kriteria as $kriteria)
-        <div class="card main-card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0">
-                        <i class="bi bi-bookmark-fill me-2 text-primary"></i>
-                        {{ $kriteria['nama'] }}
-                    </h5>
-                    <small class="text-muted">Detail nilai aktual, target ideal, GAP, dan bobot GAP</small>
+        {{-- NILAI TOTAL & PER ASPEK --}}
+        <div class="row g-3 mb-4">
+            <div class="col-lg-3">
+                <div class="score-card">
+                    <div class="card-body d-flex flex-column justify-content-center text-center p-4">
+                        <div class="score-label">Nilai Total</div>
+
+                        <div class="score-value">
+                            {{ number_format($hasil->nilai_total, 2) }}
+                        </div>
+
+                        <div class="score-max">dari maksimal 320</div>
+
+                        @php
+                            $persentaseNilai = ($hasil->nilai_total / 320) * 100;
+                            $persentaseNilai = $persentaseNilai > 100 ? 100 : $persentaseNilai;
+                        @endphp
+
+                        <div class="score-progress">
+                            <div class="score-progress-bar" style="width: {{ $persentaseNilai }}%"></div>
+                        </div>
+                    </div>
                 </div>
-
-                <span class="criteria-badge">
-                    Bobot {{ $kriteria['bobot'] }}%
-                </span>
             </div>
 
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover table-modern mb-0">
-                        <thead>
-                            <tr>
-                                <th>Sub Kriteria</th>
-                                <th width="130" class="text-center">Tipe</th>
-                                <th width="130" class="text-center">Nilai Aktual</th>
-                                <th width="130" class="text-center">Nilai Ideal</th>
-                                <th width="100" class="text-center">GAP</th>
-                                <th width="100" class="text-center">Bobot</th>
-                            </tr>
-                        </thead>
+            <div class="col-lg-9">
+                <div class="row g-3">
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card aspect-card">
+                            <div class="card-body">
+                                <div class="aspect-icon bg-blue">
+                                    <i class="bi bi-tools"></i>
+                                </div>
+                                <div class="aspect-title">Teknis</div>
+                                <div class="aspect-value">{{ number_format($hasil->nilai_teknis, 2) }}</div>
+                                <p class="aspect-meta">Bobot 35%</p>
+                                <p class="aspect-meta">NCF: {{ $hasil->ncf_teknis }} | NSF: {{ $hasil->nsf_teknis }}</p>
+                            </div>
+                        </div>
+                    </div>
 
-                        <tbody>
-                            @foreach($kriteria['sub_kriteria'] as $sub)
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card aspect-card">
+                            <div class="card-body">
+                                <div class="aspect-icon bg-green">
+                                    <i class="bi bi-people"></i>
+                                </div>
+                                <div class="aspect-title">Non Teknis</div>
+                                <div class="aspect-value">{{ number_format($hasil->nilai_non_teknis, 2) }}</div>
+                                <p class="aspect-meta">Bobot 25%</p>
+                                <p class="aspect-meta">NCF: {{ $hasil->ncf_non_teknis }} | NSF: {{ $hasil->nsf_non_teknis }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card aspect-card">
+                            <div class="card-body">
+                                <div class="aspect-icon bg-orange">
+                                    <i class="bi bi-person-check"></i>
+                                </div>
+                                <div class="aspect-title">Kepribadian</div>
+                                <div class="aspect-value">{{ number_format($hasil->nilai_kepribadian, 2) }}</div>
+                                <p class="aspect-meta">Bobot 25%</p>
+                                <p class="aspect-meta">NCF: {{ $hasil->ncf_kepribadian }} | NSF: {{ $hasil->nsf_kepribadian }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card aspect-card">
+                            <div class="card-body">
+                                <div class="aspect-icon bg-purple">
+                                    <i class="bi bi-diagram-3"></i>
+                                </div>
+                                <div class="aspect-title">Kepemimpinan</div>
+                                <div class="aspect-value">{{ number_format($hasil->nilai_kepemimpinan, 2) }}</div>
+                                <p class="aspect-meta">Bobot 15%</p>
+                                <p class="aspect-meta">NCF: {{ $hasil->ncf_kepemimpinan }} | NSF: {{ $hasil->nsf_kepemimpinan }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- DETAIL PER KRITERIA --}}
+        @foreach($detail_kriteria as $kriteria)
+            <div class="card main-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="bi bi-bookmark-fill me-2 text-primary"></i>
+                            {{ $kriteria['nama'] }}
+                        </h5>
+                        <small class="text-muted">Detail nilai aktual, target ideal, GAP, dan bobot GAP</small>
+                    </div>
+
+                    <span class="criteria-badge">
+                        Bobot {{ $kriteria['bobot'] }}%
+                    </span>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-modern mb-0">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <strong>{{ $sub['nama'] }}</strong>
-                                    </td>
-
-                                    <td class="text-center">
-                                        @if($sub['tipe'] == 'core')
-                                            <span class="factor-badge badge-core">Core</span>
-                                        @else
-                                            <span class="factor-badge badge-secondary">Secondary</span>
-                                        @endif
-                                    </td>
-
-                                    <td class="text-center fw-bold">
-                                        {{ $sub['nilai'] }}
-                                    </td>
-
-                                    <td class="text-center text-muted fw-bold">
-                                        {{ $sub['nilai_ideal'] }}
-                                    </td>
-
-                                    <td class="text-center">
-                                        @if($sub['gap'] == 0)
-                                            <span class="gap-badge bg-success text-white">
-                                                0
-                                            </span>
-                                        @elseif($sub['gap'] > 0)
-                                            <span class="gap-badge bg-info text-dark">
-                                                +{{ $sub['gap'] }}
-                                            </span>
-                                        @else
-                                            <span class="gap-badge bg-danger text-white">
-                                                {{ $sub['gap'] }}
-                                            </span>
-                                        @endif
-                                    </td>
-
-                                    <td class="text-center">
-                                        <span class="bobot-pill">
-                                            {{ $sub['bobot'] }}
-                                        </span>
-                                    </td>
+                                    <th>Sub Kriteria</th>
+                                    <th width="130" class="text-center">Tipe</th>
+                                    <th width="130" class="text-center">Nilai Aktual</th>
+                                    <th width="130" class="text-center">Nilai Ideal</th>
+                                    <th width="100" class="text-center">GAP</th>
+                                    <th width="100" class="text-center">Bobot</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
+                            </thead>
 
-                    </table>
+                            <tbody>
+                                @foreach($kriteria['sub_kriteria'] as $sub)
+                                    <tr>
+                                        <td>
+                                            <strong>{{ $sub['nama'] }}</strong>
+                                        </td>
+
+                                        <td class="text-center">
+                                            @if($sub['tipe'] == 'core')
+                                                <span class="factor-badge badge-core">Core</span>
+                                            @else
+                                                <span class="factor-badge badge-secondary">Secondary</span>
+                                            @endif
+                                        </td>
+
+                                        <td class="text-center fw-bold">
+                                            {{ $sub['nilai'] }}
+                                        </td>
+
+                                        <td class="text-center text-muted fw-bold">
+                                            {{ $sub['nilai_ideal'] }}
+                                        </td>
+
+                                        <td class="text-center">
+                                            @if($sub['gap'] == 0)
+                                                <span class="gap-badge bg-success text-white">0</span>
+                                            @elseif($sub['gap'] > 0)
+                                                <span class="gap-badge bg-info text-dark">+{{ $sub['gap'] }}</span>
+                                            @else
+                                                <span class="gap-badge bg-danger text-white">{{ $sub['gap'] }}</span>
+                                            @endif
+                                        </td>
+
+                                        <td class="text-center">
+                                            <span class="bobot-pill">
+                                                {{ $sub['bobot'] }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-    @endforeach
+        @endforeach
 
-    <div class="text-center pb-4">
-        <a href="{{ route('hasil.index') }}?periode_id={{ $hasil->periode_id }}" class="btn btn-secondary px-4">
-            <i class="bi bi-arrow-left me-2"></i>Kembali ke Daftar Hasil
-        </a>
-    </div>
+        <div class="text-center pb-4">
+            <a href="{{ route('hasil.index') }}?periode_id={{ $hasil->periode_id }}" class="btn btn-secondary px-4">
+                <i class="bi bi-arrow-left me-2"></i>Kembali ke Daftar Hasil
+            </a>
+        </div>
+
+    @endif
 
 @endsection

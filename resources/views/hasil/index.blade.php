@@ -234,6 +234,7 @@
     @php
         $role = Auth::user()->role ?? null;
 
+        // Sorting koleksi agar seragam
         $hasilCollection = collect($hasilList)->sortBy('ranking')->values();
         $totalHasil = $hasilCollection->count();
         $topHasil = $hasilCollection->first();
@@ -245,21 +246,20 @@
 
         $nilaiTertinggi = $topHasil ? $topHasil->nilai_total : 0;
 
-        $status = $statusValidasi ?? 'menunggu';
-
         $badgeValidasi = [
             'menunggu' => 'warning',
             'disetujui' => 'success',
             'ditolak' => 'danger',
-        ][$status] ?? 'secondary';
+        ][$statusValidasi] ?? 'secondary';
 
         $labelValidasi = [
             'menunggu' => 'Menunggu Validasi',
             'disetujui' => 'Disetujui',
             'ditolak' => 'Ditolak',
-        ][$status] ?? 'Tidak Diketahui';
+        ][$statusValidasi] ?? 'Tidak Diketahui';
     @endphp
 
+    {{-- ─── PAGE HERO ─────────────────────────────────────────── --}}
     <div class="page-hero">
         <div class="row align-items-center">
             <div class="col-md-8">
@@ -288,6 +288,7 @@
         </div>
     </div>
 
+    {{-- ─── FILTER PERIODE ─────────────────────────────────────── --}}
     <div class="card filter-card mb-4">
         <div class="card-body">
             <div class="row align-items-end g-3">
@@ -306,12 +307,11 @@
 
                 <div class="col-lg-7 text-lg-end">
                     @if($periode)
-
-                        @if(in_array($role, ['admin', 'hrd']))
+                        {{-- Tombol Hitung: Muncul jika Admin, atau HRD saat belum ada data / ditolak --}}
+                        @if($role === 'admin' || ($role === 'hrd' && (!$hasData || $statusValidasi === 'ditolak')))
                             <form action="{{ route('hasil.calculate') }}" method="POST" class="d-inline">
                                 @csrf
                                 <input type="hidden" name="periode_id" value="{{ $periode->id }}">
-
                                 <button type="submit" class="btn btn-success"
                                     onclick="return confirm('Proses perhitungan akan menghapus hasil sebelumnya. Lanjutkan?')">
                                     <i class="bi bi-calculator me-1"></i>Proses Perhitungan
@@ -319,27 +319,28 @@
                             </form>
                         @endif
 
-                        @if($totalHasil > 0)
+                        {{-- Tombol Export PDF: Hanya jika ada data yang boleh dilihat --}}
+                        @if($totalHasil > 0 && ($role === 'direktur' || $statusValidasi === 'disetujui'))
                             <a href="{{ route('hasil.export-pdf') }}?periode_id={{ $periode->id }}" class="btn btn-danger ms-2"
                                 target="_blank">
                                 <i class="bi bi-file-earmark-pdf-fill me-1"></i>Export PDF
                             </a>
                         @endif
-
                     @endif
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- ─── STATUS VALIDASI BAR ────────────────────────────────── --}}
     @if($periode)
         <div class="card validasi-card mb-4">
             <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
                     <div class="validasi-icon bg-{{ $badgeValidasi }}">
-                        @if($status === 'disetujui')
+                        @if($statusValidasi === 'disetujui')
                             <i class="bi bi-check-circle-fill"></i>
-                        @elseif($status === 'ditolak')
+                        @elseif($statusValidasi === 'ditolak')
                             <i class="bi bi-x-circle-fill"></i>
                         @else
                             <i class="bi bi-hourglass-split"></i>
@@ -348,13 +349,11 @@
 
                     <div>
                         <div class="text-muted small">Status Validasi Laporan</div>
-                        <h5 class="fw-bold mb-1">
-                            {{ $periode->nama }} ({{ $periode->tahun }})
-                        </h5>
+                        <h5 class="fw-bold mb-1">{{ $periode->nama }} ({{ $periode->tahun }})</h5>
 
                         @if($validasi && $validasi->catatan_validasi)
                             <div class="text-muted small">
-                                Catatan: {{ $validasi->catatan_validasi }}
+                                <strong>Catatan Direktur:</strong> "{{ $validasi->catatan_validasi }}"
                             </div>
                         @endif
                     </div>
@@ -367,7 +366,7 @@
 
                     @if($validasi)
                         <div class="text-muted small mt-2">
-                            Divalidasi oleh: {{ $validasi->user->name ?? '-' }} <br>
+                            Divalidasi oleh: {{ $validasi->user->name ?? '-' }}<br>
                             Tanggal:
                             {{ $validasi->tanggal_validasi ? \Carbon\Carbon::parse($validasi->tanggal_validasi)->format('d M Y H:i') : '-' }}
                         </div>
@@ -376,296 +375,263 @@
             </div>
         </div>
 
-        @if($status === 'ditolak' && in_array($role, ['admin', 'hrd']))
-            <div class="alert alert-danger">
+        {{-- Alert Khusus HRD/Admin jika ditolak --}}
+        @if($statusValidasi === 'ditolak' && in_array($role, ['admin', 'hrd']))
+            <div class="alert alert-danger shadow-sm">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                Laporan hasil penilaian ditolak oleh Direktur Utama. HRD/Admin perlu memeriksa kembali data penilaian dan melakukan
-                proses perhitungan ulang.
+                <strong>Laporan Ditolak:</strong> Nilai hasil akhir disembunyikan dari dashboard. Silakan lakukan perbaikan
+                penilaian atau klik tombol <strong>Proses Perhitungan</strong> di atas untuk kalkulasi ulang.
             </div>
         @endif
     @endif
 
-    @if($periode && $totalHasil > 0)
+    {{-- ─── KONDISI AKSES KONTEN UTAMA ─────────────────────────── --}}
+    @if($periode)
+        @if($role === 'direktur' || $statusValidasi === 'disetujui')
+            @if($totalHasil > 0)
 
-        <div class="row g-3 mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="card stat-card">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-muted small">Total Dinilai</div>
-                            <h3 class="fw-bold mb-0">{{ $totalHasil }}</h3>
-                        </div>
-                        <div class="summary-icon bg-blue">
-                            <i class="bi bi-people-fill"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card stat-card">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-muted small">Nilai Tertinggi</div>
-                            <h3 class="fw-bold mb-0">{{ number_format($nilaiTertinggi, 2) }}</h3>
-                        </div>
-                        <div class="summary-icon bg-orange">
-                            <i class="bi bi-award-fill"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card stat-card">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-muted small">Klasifikasi A</div>
-                            <h3 class="fw-bold mb-0">{{ $jumlahA }}</h3>
-                        </div>
-                        <div class="summary-icon bg-green">
-                            <i class="bi bi-check-circle-fill"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card stat-card">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-muted small">Periode</div>
-                            <h5 class="fw-bold mb-0">{{ $periode->tahun }}</h5>
-                        </div>
-                        <div class="summary-icon bg-purple">
-                            <i class="bi bi-calendar3"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @if($topHasil)
-            <div class="winner-card">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="winner-rank">
-                                <i class="bi bi-trophy-fill"></i>
-                            </div>
-
-                            <div>
-                                <h4 class="winner-name">
-                                    {{ $topHasil->karyawan->nama }}
-                                </h4>
-                                <div class="text-muted">
-                                    Ranking #1 |
-                                    NIK: {{ $topHasil->karyawan->nik }} |
-                                    {{ $topHasil->karyawan->jabatan ?? '-' }}
+                {{-- 1. Statistik Ringkasan Nilai --}}
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small">Total Dinilai</div>
+                                    <h3 class="fw-bold mb-0">{{ $totalHasil }}</h3>
+                                </div>
+                                <div class="summary-icon bg-blue">
+                                    <i class="bi bi-people-fill"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <p class="winner-score">{{ number_format($topHasil->nilai_total, 2) }}</p>
-                        <span class="badge bg-{{ $topHasil->klasifikasi_badge }} fs-6">
-                            Kelas {{ $topHasil->klasifikasi }}
-                        </span>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small">Nilai Tertinggi</div>
+                                    <h3 class="fw-bold mb-0">{{ number_format($nilaiTertinggi, 2) }}</h3>
+                                </div>
+                                <div class="summary-icon bg-orange">
+                                    <i class="bi bi-award-fill"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small">Klasifikasi A</div>
+                                    <h3 class="fw-bold mb-0">{{ $jumlahA }}</h3>
+                                </div>
+                                <div class="summary-icon bg-green">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card stat-card">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small">Periode</div>
+                                    <h5 class="fw-bold mb-0">{{ $periode->tahun }}</h5>
+                                </div>
+                                <div class="summary-icon bg-purple">
+                                    <i class="bi bi-calendar3"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 2. Winner Card --}}
+                @if($topHasil)
+                    <div class="winner-card">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="winner-rank">
+                                        <i class="bi bi-trophy-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="winner-name">{{ $topHasil->karyawan->nama }}</h4>
+                                        <div class="text-muted">
+                                            Ranking #1 | NIK: {{ $topHasil->karyawan->nik }} | {{ $topHasil->karyawan->jabatan ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                                <p class="winner-score">{{ number_format($topHasil->nilai_total, 2) }}</p>
+                                <span class="badge bg-success fs-6">Kelas {{ $topHasil->klasifikasi }}</span>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- 3. Tabel Klasifikasi Modern --}}
+                <div class="card main-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0"><i class="bi bi-table me-2 text-primary"></i>Ranking Karyawan Terbaik</h5>
+                            <small class="text-muted">{{ $periode->nama }}</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ $totalHasil }} Data</span>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-modern datatable mb-0">
+                                <thead>
+                                    <tr>
+                                        <th width="80" class="text-center">Rank</th>
+                                        <th>Karyawan</th>
+                                        <th>Jabatan</th>
+                                        <th class="text-center">Teknis</th>
+                                        <th class="text-center">Non Teknis</th>
+                                        <th class="text-center">Kepribadian</th>
+                                        <th class="text-center">Kepemimpinan</th>
+                                        <th class="text-center">Nilai Total</th>
+                                        <th class="text-center">Kelas</th>
+                                        <th width="90" class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($hasilCollection as $hasil)
+                                        <tr>
+                                            <td class="text-center">
+                                                <span
+                                                    class="rank-badge 
+                                                                                                                                                                                                                                        @if($hasil->ranking == 1) bg-warning text-dark
+                                                                                                                                                                                                                                        @elseif($hasil->ranking == 2) bg-secondary text-white
+                                                                                                                                                                                                                                        @elseif($hasil->ranking == 3) bg-danger text-white
+                                                                                                                                                                                                                                        @else bg-light text-dark @endif">
+                                                    @if($hasil->ranking <= 3) <i class="bi bi-trophy-fill me-1"></i> @endif
+                                                    #{{ $hasil->ranking }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="employee-name">
+                                                    {{ $hasil->karyawan->nama }}
+                                                    @if($hasil->ranking == 1) <i class="bi bi-star-fill text-warning ms-1"></i> @endif
+                                                </div>
+                                                <div class="employee-sub">NIK: {{ $hasil->karyawan->nik }}</div>
+                                            </td>
+                                            <td>{{ $hasil->karyawan->jabatan ?? '-' }}</td>
+                                            <td class="text-center"><span
+                                                    class="aspect-pill">{{ number_format($hasil->nilai_teknis, 2) }}</span></td>
+                                            <td class="text-center"><span
+                                                    class="aspect-pill">{{ number_format($hasil->nilai_non_teknis, 2) }}</span></td>
+                                            <td class="text-center"><span
+                                                    class="aspect-pill">{{ number_format($hasil->nilai_kepribadian, 2) }}</span></td>
+                                            <td class="text-center"><span
+                                                    class="aspect-pill">{{ number_format($hasil->nilai_kepemimpinan, 2) }}</span></td>
+                                            <td class="text-center"><span
+                                                    class="score-pill">{{ number_format($hasil->nilai_total, 2) }}</span></td>
+                                            <td class="text-center">
+                                                <span
+                                                    class="badge @if($hasil->klasifikasi == 'A') bg-success @elseif($hasil->klasifikasi == 'B') bg-primary @elseif($hasil->klasifikasi == 'C') bg-warning text-dark @else bg-danger @endif">
+                                                    {{ $hasil->klasifikasi }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="{{ route('hasil.show', $hasil->karyawan_id) }}?periode_id={{ $periode->id }}"
+                                                    class="btn btn-info btn-sm action-btn" title="Lihat Detail">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 4. Ringkasan Grid Bawah --}}
+                <div class="row g-3 mt-3">
+                    <div class="col-md-3">
+                        <div class="card stat-card text-center py-2">
+                            <div class="card-body">
+                                <h3 class="text-success fw-bold mb-0">{{ $jumlahA }}</h3>
+                                <p class="text-muted mb-0">Baik Sekali (A)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card text-center py-2">
+                            <div class="card-body">
+                                <h3 class="text-primary fw-bold mb-0">{{ $jumlahB }}</h3>
+                                <p class="text-muted mb-0">Baik (B)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card text-center py-2">
+                            <div class="card-body">
+                                <h3 class="text-warning fw-bold mb-0">{{ $jumlahC }}</h3>
+                                <p class="text-muted mb-0">Cukup (C)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card text-center py-2">
+                            <div class="card-body">
+                                <h3 class="text-danger fw-bold mb-0">{{ $jumlahD }}</h3>
+                                <p class="text-muted mb-0">Kurang (D)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            @else
+                {{-- Data kosong murni (Belum dihitung oleh siapa pun) --}}
+                <div class="card main-card">
+                    <div class="empty-state">
+                        <i class="bi bi-calculator"></i>
+                        <h4 class="mt-3">Belum Ada Hasil Perhitungan</h4>
+                        <p class="text-muted">Proses perhitungan nilai belum dijalankan untuk periode ini.</p>
+                    </div>
+                </div>
+            @endif
+
+        @else
+            {{-- ── BLOCK PROTEKSI AMAN: Kondisi jika User adalah HRD/Admin & Status Menunggu/Ditolak ── --}}
+            <div class="card main-card">
+                <div class="empty-state py-5">
+                    @if($statusValidasi === 'menunggu')
+                        <i class="bi bi-hourglass-split text-warning"></i>
+                        <h4 class="mt-3">Menunggu Validasi Direktur Utama</h4>
+                        <p class="text-muted px-md-5">
+                            Hasil perhitungan periode ini telah berhasil dikalkulasi. Namun, data nilai akhir disembunyikan sementara
+                            sampai mendapatkan persetujuan/validasi resmi dari Direktur Utama.
+                        </p>
+                    @elseif($statusValidasi === 'ditolak')
+                        <i class="bi bi-shield-x text-danger" style="font-size: 56px;"></i>
+                        <h4 class="mt-3">Dashboard Nilai Ditutup (Laporan Ditolak)</h4>
+                        <p class="text-muted px-md-5">
+                            Direktur Utama menolak hasil penilaian pada periode ini. Seluruh rekap skor otomatis dibekukan demi
+                            integritas data perusahaan.
+                        </p>
+                    @endif
                 </div>
             </div>
         @endif
 
-        <div class="card main-card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0">
-                        <i class="bi bi-table me-2 text-primary"></i>
-                        Ranking Karyawan Terbaik
-                    </h5>
-                    <small class="text-muted">{{ $periode->nama }} ({{ $periode->tahun }})</small>
-                </div>
-
-                <span class="badge bg-primary rounded-pill">
-                    {{ $totalHasil }} Data
-                </span>
-            </div>
-
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover table-modern datatable mb-0">
-                        <thead>
-                            <tr>
-                                <th width="80" class="text-center">Rank</th>
-                                <th>Karyawan</th>
-                                <th>Jabatan</th>
-                                <th class="text-center">Teknis</th>
-                                <th class="text-center">Non Teknis</th>
-                                <th class="text-center">Kepribadian</th>
-                                <th class="text-center">Kepemimpinan</th>
-                                <th class="text-center">Nilai Total</th>
-                                <th class="text-center">Kelas</th>
-                                <th width="90" class="text-center">Aksi</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            @foreach($hasilCollection as $hasil)
-                                <tr>
-                                    <td class="text-center" data-order="{{ $hasil->ranking }}">
-                                        <span class="rank-badge
-                                                                    @if($hasil->ranking == 1) bg-warning text-dark
-                                                                    @elseif($hasil->ranking == 2) bg-secondary text-white
-                                                                    @elseif($hasil->ranking == 3) bg-danger text-white
-                                                                    @else bg-light text-dark
-                                                                    @endif">
-                                            @if($hasil->ranking <= 3)
-                                                <i class="bi bi-trophy-fill me-1"></i>
-                                            @endif
-                                            #{{ $hasil->ranking }}
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        <div class="employee-name">
-                                            {{ $hasil->karyawan->nama }}
-                                            @if($hasil->ranking == 1)
-                                                <i class="bi bi-star-fill text-warning ms-1"></i>
-                                            @endif
-                                        </div>
-                                        <div class="employee-sub">
-                                            NIK: {{ $hasil->karyawan->nik }}
-                                        </div>
-                                    </td>
-
-                                    <td>{{ $hasil->karyawan->jabatan ?? '-' }}</td>
-
-                                    <td class="text-center">
-                                        <span class="aspect-pill">
-                                            {{ number_format($hasil->nilai_teknis, 2) }}
-                                        </span>
-                                    </td>
-
-                                    <td class="text-center">
-                                        <span class="aspect-pill">
-                                            {{ number_format($hasil->nilai_non_teknis, 2) }}
-                                        </span>
-                                    </td>
-
-                                    <td class="text-center">
-                                        <span class="aspect-pill">
-                                            {{ number_format($hasil->nilai_kepribadian, 2) }}
-                                        </span>
-                                    </td>
-
-                                    <td class="text-center">
-                                        <span class="aspect-pill">
-                                            {{ number_format($hasil->nilai_kepemimpinan, 2) }}
-                                        </span>
-                                    </td>
-
-                                    <td class="text-center" data-order="{{ $hasil->nilai_total }}">
-                                        <span class="score-pill">
-                                            {{ number_format($hasil->nilai_total, 2) }}
-                                        </span>
-                                    </td>
-
-                                    <td class="text-center">
-                                        <span class="badge bg-{{ $hasil->klasifikasi_badge }}">
-                                            {{ $hasil->klasifikasi }}
-                                        </span>
-                                    </td>
-
-                                    <td class="text-center">
-                                        <a href="{{ route('hasil.show', $hasil->karyawan_id) }}?periode_id={{ $periode->id }}"
-                                            class="btn btn-info btn-sm action-btn" title="Lihat Detail">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3 mt-3">
-            <div class="col-md-3">
-                <div class="card stat-card text-center">
-                    <div class="card-body">
-                        <h3 class="text-success fw-bold mb-0">{{ $jumlahA }}</h3>
-                        <p class="text-muted mb-0">Baik Sekali (A)</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card stat-card text-center">
-                    <div class="card-body">
-                        <h3 class="text-primary fw-bold mb-0">{{ $jumlahB }}</h3>
-                        <p class="text-muted mb-0">Baik (B)</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card stat-card text-center">
-                    <div class="card-body">
-                        <h3 class="text-warning fw-bold mb-0">{{ $jumlahC }}</h3>
-                        <p class="text-muted mb-0">Cukup (C)</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card stat-card text-center">
-                    <div class="card-body">
-                        <h3 class="text-danger fw-bold mb-0">{{ $jumlahD }}</h3>
-                        <p class="text-muted mb-0">Kurang (D)</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    @elseif($periode)
-
-        <div class="card main-card">
-            <div class="empty-state">
-                <i class="bi bi-calculator"></i>
-                <h4 class="mt-3">Belum Ada Hasil Perhitungan</h4>
-
-                @if(in_array($role, ['admin', 'hrd']))
-                    <p class="text-muted">Silakan proses perhitungan terlebih dahulu untuk melihat hasil ranking.</p>
-
-                    <form action="{{ route('hasil.calculate') }}" method="POST" class="d-inline">
-                        @csrf
-                        <input type="hidden" name="periode_id" value="{{ $periode->id }}">
-
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-calculator me-1"></i>Mulai Perhitungan
-                        </button>
-                    </form>
-                @else
-                    <p class="text-muted">
-                        Hasil perhitungan belum tersedia. HRD/Admin perlu melakukan proses perhitungan terlebih dahulu.
-                    </p>
-                @endif
-            </div>
-        </div>
-
     @else
-
+        {{-- Jika Belum Ada Periode yang Dipilih --}}
         <div class="card main-card">
             <div class="empty-state">
                 <i class="bi bi-calendar-x"></i>
                 <h4 class="mt-3">Pilih Periode Terlebih Dahulu</h4>
-                <p class="text-muted">Pilih periode penilaian untuk melihat hasil perhitungan.</p>
+                <p class="text-muted">Silakan tentukan periode penilaian pada menu dropdown di atas.</p>
             </div>
         </div>
-
     @endif
 
 @endsection

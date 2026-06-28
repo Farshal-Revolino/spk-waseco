@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request; 
 use App\Models\PeriodePenilaian;
 use App\Models\HasilPerhitungan;
 use App\Models\ValidasiHasil;
+use Illuminate\Support\Facades\Auth;
 
 class DirekturDashboardController extends Controller
 {

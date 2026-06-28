@@ -486,8 +486,9 @@
             ? \Carbon\Carbon::parse($validasi->tanggal_validasi)->format('d-m-Y H:i')
             : '-';
 
-        $namaValidator = $validasi->user->name ?? '-';
-        $catatanValidasi = $validasi->catatan_validasi ?? '-';
+        // PERBAIKAN DI SINI: Proteksi Object agar tidak crash saat $validasi kosong (null)
+        $namaValidator = ($validasi && $validasi->user) ? $validasi->user->name : '-';
+        $catatanValidasi = $validasi ? $validasi->catatan_validasi : '-';
     @endphp
 
     @if(file_exists(public_path('img/waseco.png')))
@@ -659,11 +660,11 @@
                 <tr class="{{ $hasil->ranking <= 3 ? 'top-rank-row' : '' }}">
                     <td>
                         <span class="ranking-badge
-                                    @if($hasil->ranking == 1) ranking-1
-                                    @elseif($hasil->ranking == 2) ranking-2
-                                    @elseif($hasil->ranking == 3) ranking-3
-                                    @else ranking-other
-                                    @endif">
+                                                @if($hasil->ranking == 1) ranking-1
+                                                @elseif($hasil->ranking == 2) ranking-2
+                                                @elseif($hasil->ranking == 3) ranking-3
+                                                @else ranking-other
+                                                @endif">
                             #{{ $hasil->ranking }}
                         </span>
                     </td>
