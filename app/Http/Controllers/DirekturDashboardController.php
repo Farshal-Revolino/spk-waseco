@@ -37,4 +37,32 @@ class DirekturDashboardController extends Controller
             'statusValidasi'
         ));
     }
+
+    public function validasi()
+    {
+        $periode = PeriodePenilaian::where('status', 'aktif')->first();
+
+        $hasilList = collect();
+        $validasi = null;
+
+        if ($periode) {
+            $hasilList = HasilPerhitungan::with('karyawan')
+                ->where('periode_id', $periode->id)
+                ->orderBy('ranking', 'ASC')
+                ->get();
+
+            $validasi = ValidasiHasil::with('user')
+                ->where('periode_id', $periode->id)
+                ->first();
+        }
+
+        $statusValidasi = $validasi->status_validasi ?? 'menunggu';
+
+        return view('direktur.validasi', compact(
+            'periode',
+            'hasilList',
+            'validasi',
+            'statusValidasi'
+        ));
+    }
 }

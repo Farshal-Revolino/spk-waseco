@@ -103,12 +103,15 @@
             color: #6b7280;
         }
 
-        .info-box {
-            border: 1px solid #dbeafe;
-            border-left: 5px solid #1a56a0;
-            background: #f8fbff;
+        /* PERBAIKAN: Info Box & Note Box Lebih Bersih */
+        .info-box,
+        .note-box,
+        .approval-box {
+            border: 1px solid #d1d5db;
+            border-left: 4px solid #1a56a0;
+            background: #ffffff;
             padding: 8px 10px;
-            margin-bottom: 9px;
+            margin-bottom: 10px;
         }
 
         .info-table {
@@ -133,6 +136,18 @@
             text-align: center;
         }
 
+        .note-box,
+        .approval-box {
+            font-size: 9px;
+            color: #374151;
+        }
+
+        .note-box strong,
+        .approval-box strong {
+            color: #1a56a0;
+        }
+
+        /* Validasi Box */
         .validasi-box {
             width: 100%;
             border-collapse: collapse;
@@ -140,7 +155,7 @@
         }
 
         .validasi-box td {
-            border: 1px solid #e5e7eb;
+            border: 1px solid #d1d5db;
             padding: 7px 8px;
             vertical-align: middle;
             background: #ffffff;
@@ -162,8 +177,8 @@
 
         .status-label {
             display: inline-block;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 4px 8px;
+            border-radius: 3px;
             color: #ffffff;
             font-size: 9px;
             font-weight: bold;
@@ -182,6 +197,7 @@
             background: #ef4444;
         }
 
+        /* PERBAIKAN: Top 3 Section Tampil Elegan */
         .top-section-title {
             font-size: 11px;
             font-weight: bold;
@@ -198,31 +214,28 @@
 
         .top-three td {
             width: 33.33%;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #d1d5db;
             padding: 8px;
             vertical-align: top;
             background: #ffffff;
         }
 
         .top-card-1 {
-            border-top: 4px solid #fbbf24 !important;
-            background: #fffbeb !important;
+            border-top: 3px solid #1a56a0 !important;
         }
 
         .top-card-2 {
-            border-top: 4px solid #94a3b8 !important;
-            background: #f8fafc !important;
+            border-top: 3px solid #64748b !important;
         }
 
         .top-card-3 {
-            border-top: 4px solid #f87171 !important;
-            background: #fff7ed !important;
+            border-top: 3px solid #94a3b8 !important;
         }
 
         .top-rank {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
-            color: #111827;
+            color: #6b7280;
             margin-bottom: 4px;
         }
 
@@ -240,11 +253,12 @@
         }
 
         .top-score {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
-            color: #1a56a0;
+            color: #111827;
         }
 
+        /* Stats Section */
         .stats {
             width: 100%;
             border-collapse: collapse;
@@ -255,14 +269,14 @@
             width: 20%;
             padding: 7px;
             text-align: center;
-            border: 1px solid #e5e7eb;
-            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
         }
 
         .stat-value {
             font-size: 16px;
             font-weight: bold;
-            color: #1a56a0;
+            color: #111827;
             margin-bottom: 2px;
         }
 
@@ -289,6 +303,7 @@
             color: #dc2626;
         }
 
+        /* PERBAIKAN: Data Table Lebih Bersih (Zebra Putih-Abu) */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -300,7 +315,7 @@
             color: #ffffff;
             padding: 6px 4px;
             font-size: 8px;
-            border: 1px solid #0d3b7a;
+            border: 1px solid #1a56a0;
             text-align: center;
             text-transform: uppercase;
         }
@@ -317,10 +332,6 @@
             background: #f9fafb;
         }
 
-        .data-table tr.top-rank-row {
-            background: #fff8db;
-        }
-
         .text-left {
             text-align: left !important;
         }
@@ -330,89 +341,41 @@
         }
 
         .nilai-total {
-            color: #1a56a0;
+            color: #111827;
             font-weight: bold;
         }
 
+        /* PERBAIKAN: Badge Hanya Berupa Teks Tebal Berwarna */
         .ranking-badge {
             display: inline-block;
-            padding: 3px 7px;
-            border-radius: 3px;
-            font-size: 8px;
+            font-size: 9px;
             font-weight: bold;
-        }
-
-        .ranking-1 {
-            background: #fbbf24;
             color: #111827;
-        }
-
-        .ranking-2 {
-            background: #94a3b8;
-            color: #ffffff;
-        }
-
-        .ranking-3 {
-            background: #f87171;
-            color: #ffffff;
-        }
-
-        .ranking-other {
-            background: #e5e7eb;
-            color: #374151;
         }
 
         .badge {
             display: inline-block;
-            padding: 3px 7px;
-            border-radius: 3px;
-            font-size: 8px;
+            font-size: 9px;
             font-weight: bold;
-            color: #ffffff;
         }
 
         .badge-a {
-            background: #10b981;
+            color: #059669;
         }
 
         .badge-b {
-            background: #3b82f6;
+            color: #2563eb;
         }
 
         .badge-c {
-            background: #f59e0b;
+            color: #d97706;
         }
 
         .badge-d {
-            background: #ef4444;
+            color: #dc2626;
         }
 
-        .note-box {
-            margin-top: 10px;
-            padding: 8px 10px;
-            border: 1px solid #e5e7eb;
-            background: #f9fafb;
-            font-size: 8.8px;
-            color: #4b5563;
-        }
-
-        .note-box strong {
-            color: #1a56a0;
-        }
-
-        .approval-box {
-            margin-top: 10px;
-            padding: 8px 10px;
-            border: 1px solid #dbeafe;
-            background: #f8fbff;
-            font-size: 8.8px;
-            color: #374151;
-        }
-
-        .approval-box strong {
-            color: #1a56a0;
-        }
-
+        /* Signatures */
         .signature-section {
             width: 100%;
             margin-top: 23px;
@@ -486,7 +449,6 @@
             ? \Carbon\Carbon::parse($validasi->tanggal_validasi)->format('d-m-Y H:i')
             : '-';
 
-        // PERBAIKAN DI SINI: Proteksi Object agar tidak crash saat $validasi kosong (null)
         $namaValidator = ($validasi && $validasi->user) ? $validasi->user->name : '-';
         $catatanValidasi = $validasi ? $validasi->catatan_validasi : '-';
     @endphp
@@ -579,7 +541,7 @@
             <tr>
                 @foreach($topThree as $hasil)
                     <td class="top-card-{{ $hasil->ranking }}">
-                        <div class="top-rank">Ranking #{{ $hasil->ranking }}</div>
+                        <div class="top-rank">Ranking {{ $hasil->ranking }}</div>
 
                         <div class="top-name">
                             {{ $hasil->karyawan->nama ?? '-' }}
@@ -657,15 +619,10 @@
 
         <tbody>
             @foreach($hasilList as $hasil)
-                <tr class="{{ $hasil->ranking <= 3 ? 'top-rank-row' : '' }}">
+                <tr>
                     <td>
-                        <span class="ranking-badge
-                                                @if($hasil->ranking == 1) ranking-1
-                                                @elseif($hasil->ranking == 2) ranking-2
-                                                @elseif($hasil->ranking == 3) ranking-3
-                                                @else ranking-other
-                                                @endif">
-                            #{{ $hasil->ranking }}
+                        <span class="ranking-badge">
+                            {{ $hasil->ranking }}
                         </span>
                     </td>
 

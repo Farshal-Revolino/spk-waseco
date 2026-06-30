@@ -88,6 +88,13 @@ class PenilaianController extends Controller
             );
         }
 
+        // Reset status validasi dan hapus data kalkulasi lama karena nilai penilaian telah berubah
+        \App\Models\ValidasiHasil::where('periode_id', $periodeAktif->id)->delete();
+        \App\Models\HasilPerhitungan::where('periode_id', $periodeAktif->id)->delete();
+        $periodeAktif->update([
+            'status_validasi' => 'menunggu'
+        ]);
+
         return redirect()->route('penilaian.index')
             ->with('success', 'Penilaian berhasil disimpan');
     }

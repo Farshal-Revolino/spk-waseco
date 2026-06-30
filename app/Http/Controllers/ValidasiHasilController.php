@@ -33,6 +33,6 @@ class ValidasiHasilController extends Controller
             'status_validasi' => $status_untuk_db
         ]);
 
-        return redirect()->route('direktur.dashboard')->with('success', 'Keputusan berhasil disimpan.');
+        return redirect()->route('direktur.validasi')->with('success', 'Keputusan berhasil disimpan.');
     }
 }

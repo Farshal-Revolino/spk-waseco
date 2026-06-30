@@ -54,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::middleware(['role:direktur'])->group(function () {
         Route::get('/direktur/dashboard', [DirekturDashboardController::class, 'index'])->name('direktur.dashboard');
+        Route::get('/direktur/validasi', [DirekturDashboardController::class, 'validasi'])->name('direktur.validasi');
         
         // Aksi simpan validasi/persetujuan laporan
         Route::post('/direktur/validasi-hasil', [ValidasiHasilController::class, 'store'])->name('direktur.validasi-hasil');

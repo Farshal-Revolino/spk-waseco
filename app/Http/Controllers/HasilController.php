@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Models\PeriodePenilaian;
 use App\Models\ValidasiHasil;
 use App\Models\HasilPerhitungan;
@@ -41,7 +40,7 @@ class HasilController extends Controller
 
             $hasilList = HasilPerhitungan::with('karyawan')
                 ->where('periode_id', $periodeTerpilih->id)
-                ->orderBy('ranking')
+                ->orderBy('ranking', 'ASC')
                 ->get();
             
             // Jika hasilList tidak kosong, set $hasData menjadi true
@@ -78,6 +77,12 @@ class HasilController extends Controller
         $result = $service->calculate();
 
         if ($result['success']) {
+            // Hapus log validasi lama dan reset status validasi periode menjadi 'menunggu'
+            \App\Models\ValidasiHasil::where('periode_id', $periodeId)->delete();
+            \App\Models\PeriodePenilaian::where('id', $periodeId)->update([
+                'status_validasi' => 'menunggu'
+            ]);
+
             return redirect()->route('hasil.index', [
                 'periode_id' => $periodeId
             ])->with('success', $result['message']);
@@ -167,7 +172,7 @@ class HasilController extends Controller
 
         $hasilList = HasilPerhitungan::with('karyawan')
             ->where('periode_id', $periode->id)
-            ->orderBy('ranking')
+            ->orderBy('ranking', 'ASC')
             ->get();
 
         if ($hasilList->isEmpty()) {

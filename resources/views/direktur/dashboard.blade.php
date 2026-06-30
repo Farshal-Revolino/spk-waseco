@@ -192,7 +192,7 @@
 @section('content')
 
     @php
-        $hasilCollection = collect($hasilList ?? []);
+        $hasilCollection = collect($hasilList ?? [])->sortBy('ranking')->values();
         $topThree = $hasilCollection->take(3);
 
         $totalDinilai = $hasilCollection->count();
@@ -334,7 +334,8 @@
                         <div class="row g-3">
                             @foreach($topThree as $hasil)
                                 @php
-                                    $rankClass = match ($hasil->ranking) {
+                                    $rank = $hasil->ranking ?? $loop->iteration;
+                                    $rankClass = match ($rank) {
                                         1 => 'bg-warning text-dark',
                                         2 => 'bg-secondary text-white',
                                         3 => 'bg-danger text-white',
@@ -358,11 +359,11 @@
                                             </div>
 
                                             <span class="badge {{ $rankClass }} mb-3">
-                                                Ranking #{{ $hasil->ranking }}
+                                                Ranking #{{ $rank }}
                                             </span>
 
                                             <h6 class="fw-bold mb-1">
-                                                Karyawan {{ $hasil->ranking }}
+                                                {{ $hasil->karyawan->nama }}
                                             </h6>
 
                                             <div class="text-muted small mb-3">
@@ -401,85 +402,47 @@
             </div>
 
             <div class="col-xl-4">
-                <div class="validation-box">
-                    <div class="validation-header">
-                        <div>
-                            <h5 class="fw-bold mb-1">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                Validasi Laporan
-                            </h5>
-                            <small class="text-muted">
-                                Validasi hasil penilaian periode aktif
-                            </small>
+                <div class="card director-card mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-shield-check text-primary me-2"></i>
+                            Status Validasi Laporan
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="text-muted small">Status Saat Ini:</span>
+                            <span class="badge bg-{{ $badgeValidasi }} px-3 py-2">
+                                {{ $labelValidasi }}
+                            </span>
                         </div>
 
-                        <span class="badge bg-{{ $badgeValidasi }} status-badge-large">
-                            {{ $labelValidasi }}
-                        </span>
-                    </div>
-
-                    <div class="card-body">
                         @if($validasi)
-                            <div class="alert alert-{{ $badgeValidasi }}">
-                                <div class="fw-bold mb-1">Informasi Validasi</div>
-                                <div class="small">
-                                    Oleh: {{ $validasi->user->name ?? '-' }} <br>
-                                    Tanggal:
-                                    {{ $validasi->tanggal_validasi ? \Carbon\Carbon::parse($validasi->tanggal_validasi)->format('d M Y H:i') : '-' }}
-                                </div>
-
+                            <div class="p-3 bg-light rounded mb-3 small">
+                                <strong>Keterangan:</strong><br>
+                                Oleh: {{ $validasi->user->name ?? '-' }}<br>
+                                Tanggal: {{ $validasi->tanggal_validasi ? \Carbon\Carbon::parse($validasi->tanggal_validasi)->format('d M Y H:i') : '-' }}
                                 @if($validasi->catatan_validasi)
-                                    <hr>
-                                    <div class="small">
-                                        <strong>Catatan:</strong><br>
-                                        {{ $validasi->catatan_validasi }}
-                                    </div>
+                                    <hr class="my-2">
+                                    <strong>Catatan:</strong> "{{ $validasi->catatan_validasi }}"
                                 @endif
                             </div>
                         @else
-                            <div class="alert alert-warning">
-                                Hasil penilaian belum divalidasi oleh Direktur Utama.
+                            <div class="alert alert-warning p-2 small mb-3">
+                                <i class="bi bi-info-circle me-1"></i> Belum divalidasi oleh Direktur.
                             </div>
                         @endif
 
-                        <form action="{{ route('direktur.validasi-hasil') }}" method="POST" class="validation-form">
-                            @csrf
-
-                            <input type="hidden" name="periode_id" value="{{ $periode->id }}">
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    Catatan Validasi
-                                </label>
-                                <textarea name="catatan_validasi" class="form-control" rows="4"
-                                    placeholder="Masukkan catatan validasi jika diperlukan">{{ old('catatan_validasi', $validasi->catatan_validasi ?? '') }}</textarea>
-                            </div>
-
-                            <div class="d-grid gap-2">
-                                <button type="submit" name="status_validasi" value="disetujui"
-                                    class="btn btn-success btn-action"
-                                    onclick="return confirm('Setujui laporan hasil penilaian ini?')">
-                                    <i class="bi bi-check-circle me-1"></i>
-                                    Setujui Laporan
-                                </button>
-
-                                <button type="submit" name="status_validasi" value="ditolak" class="btn btn-danger btn-action"
-                                    onclick="return confirm('Tolak laporan hasil penilaian ini?')">
-                                    <i class="bi bi-x-circle me-1"></i>
-                                    Tolak Laporan
-                                </button>
-
-                                <a href="{{ route('hasil.export-pdf') }}?periode_id={{ $periode->id }}"
-                                    class="btn btn-outline-danger btn-action" target="_blank">
-                                    <i class="bi bi-file-earmark-pdf-fill me-1"></i>
-                                    Cetak PDF
-                                </a>
-                            </div>
-                        </form>
+                        <div class="d-grid">
+                            <a href="{{ route('direktur.validasi') }}" class="btn btn-primary py-2 fw-bold">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Kelola Validasi
+                            </a>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card director-card mt-4">
+                <div class="card director-card">
                     <div class="card-header bg-white">
                         <h6 class="fw-bold mb-0">
                             <i class="bi bi-pie-chart-fill text-primary me-2"></i>

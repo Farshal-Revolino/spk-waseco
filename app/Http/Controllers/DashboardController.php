@@ -24,12 +24,17 @@ class DashboardController extends Controller
 
         // 3. Ambil data Top 5 Karyawan (hanya jika ada periode aktif)
         $topKaryawan = collect();
+        $validasiAktif = null;
         if ($periodeAktif) {
             $topKaryawan = HasilPerhitungan::with('karyawan')
                 ->where('periode_id', $periodeAktif->id)
                 ->orderBy('ranking', 'ASC')
                 ->limit(5)
                 ->get();
+
+            $validasiAktif = \App\Models\ValidasiHasil::with('user')
+                ->where('periode_id', $periodeAktif->id)
+                ->first();
         }
 
         // 4. Kirim semua variabel ke view
@@ -39,7 +44,8 @@ class DashboardController extends Controller
             'totalKriteria', 
             'totalPeriode', 
             'totalPenilaian', 
-            'topKaryawan'
+            'topKaryawan',
+            'validasiAktif'
         ));
     }
 }

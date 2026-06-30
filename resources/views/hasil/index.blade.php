@@ -486,7 +486,7 @@
 
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover table-modern datatable mb-0">
+                            <table class="table table-hover table-modern datatable-ranking mb-0">
                                 <thead>
                                     <tr>
                                         <th width="80" class="text-center">Rank</th>

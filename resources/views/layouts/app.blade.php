@@ -525,7 +525,7 @@
                         <i class="bi bi-grid-1x2-fill"></i>
                         <span>Dashboard</span>
                     </a>
-                </li>
+                </td>
 
                 <li>
                     <a href="{{ route('karyawan.index') }}"
@@ -533,7 +533,7 @@
                         <i class="bi bi-people-fill"></i>
                         <span>Data Karyawan</span>
                     </a>
-                </li>
+                </td>
 
                 <li>
                     <a href="{{ route('penilaian.index') }}"
@@ -541,7 +541,7 @@
                         <i class="bi bi-clipboard-check-fill"></i>
                         <span>Input Penilaian</span>
                     </a>
-                </li>
+                </td>
 
                 <li>
                     <a href="{{ route('hasil.index') }}"
@@ -549,7 +549,7 @@
                         <i class="bi bi-trophy-fill"></i>
                         <span>Perhitungan & Hasil</span>
                     </a>
-                </li>
+                </td>
             @endif
 
             {{-- MENU DIREKTUR --}}
@@ -560,7 +560,15 @@
                         <i class="bi bi-speedometer2"></i>
                         <span>Dashboard Direktur</span>
                     </a>
-                </li>
+                </td>
+
+                <li>
+                    <a href="{{ route('direktur.validasi') }}"
+                        class="sidebar-link {{ request()->routeIs('direktur.validasi') || request()->is('direktur/validasi') ? 'active' : '' }}">
+                        <i class="bi bi-shield-fill-check"></i>
+                        <span>Validasi Laporan</span>
+                    </a>
+                </td>
 
                 <li>
                     <a href="{{ route('hasil.index') }}"
@@ -568,7 +576,7 @@
                         <i class="bi bi-trophy-fill"></i>
                         <span>Hasil Ranking</span>
                     </a>
-                </li>
+                </td>
             @endif
 
         </ul>
@@ -678,6 +686,7 @@
                 });
             }
 
+            // 1. Inisialisasi DataTables Standar untuk data umum
             if ($.fn.DataTable) {
                 $('.datatable').DataTable({
                     responsive: true,
@@ -697,6 +706,24 @@
                         }
                     }
                 });
+
+                // 2. BAGIAN DIPERBARUI: Inisialisasi Otomatis Khusus Tabel Ranking Karyawan
+                let tableRanking = $('.datatable-ranking').DataTable({
+                    responsive: true,
+                    pageLength: 10,
+                    order: [], // Pertahankan urutan dari server (sudah diurutkan ranking ASC)
+                    columnDefs: [
+                        { "searchable": false, "orderable": false, "targets": 0 } // Mengunci kolom Rank agar tidak bisa di-sort
+                    ],
+                    language: {
+                        search: "Cari:",
+                        lengthMenu: "Tampilkan _MENU_ data",
+                        zeroRecords: "Data tidak ditemukan",
+                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                        infoEmpty: "Tidak ada data",
+                        paginate: { first: "Pertama", last: "Terakhir", next: "Berikutnya", previous: "Sebelumnya" }
+                    }
+                });
             }
         });
 
@@ -705,7 +732,6 @@
                 form.submit();
                 return true;
             }
-
             return false;
         }
     </script>

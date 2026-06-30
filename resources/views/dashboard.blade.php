@@ -218,6 +218,23 @@
             </div>
         </div>
 
+        @if($periodeAktif && $periodeAktif->status_validasi === 'ditolak' && in_array(auth()->user()->role, ['admin', 'hrd']))
+            <div class="alert alert-danger shadow-sm mb-4 d-flex align-items-center gap-3">
+                <div class="fs-3 text-danger"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div>
+                    <h6 class="alert-heading fw-bold mb-1">Laporan Penilaian Ditolak oleh Direktur Utama</h6>
+                    <p class="mb-1 text-muted small">
+                        Direktur Utama menolak laporan hasil penilaian untuk periode <strong>{{ $periodeAktif->nama }}</strong>. Seluruh data hasil penilaian dibekukan dari dashboard.
+                    </p>
+                    @if($validasiAktif && $validasiAktif->catatan_validasi)
+                        <div class="mt-2 p-2 bg-light rounded text-dark border-start border-danger border-3 small">
+                            <strong>Catatan Revisi:</strong> "{{ $validasiAktif->catatan_validasi }}"
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         {{-- STATISTICS --}}
         <div class="row g-3 mb-4">
             @php
@@ -303,23 +320,22 @@
                                     </thead>
 
                                     <tbody>
-                                    <tbody>
                                         @foreach($topKaryawan as $hasil)
                                             <tr>
                                                 <td>
-                                                    @if($periodeAktif->status_validasi == 'divalidasi')
-                                                        <span
-                                                            class="badge rank-badge
-                                                                                                                                                                                        @if($hasil->ranking == 1) bg-warning text-dark
-                                                                                                                                                                                        @elseif($hasil->ranking == 2) bg-secondary
-                                                                                                                                                                                        @elseif($hasil->ranking == 3) bg-danger
-                                                                                                                                                                                        @else bg-light text-dark
-                                                                                                                                                                                        @endif">
-                                                            #{{ $hasil->ranking }}
-                                                        </span>
-                                                    @else
-                                                        <span class="badge bg-light text-muted"><i class="bi bi-lock-fill"></i></span>
-                                                    @endif
+                                                    @php
+                                                        $rank = $hasil->ranking ?? $loop->iteration;
+                                                        $rankClass = match(true) {
+                                                            $rank == 1 => 'bg-warning text-dark',
+                                                            $rank == 2 => 'bg-secondary text-white',
+                                                            $rank == 3 => 'bg-danger text-white',
+                                                            default    => 'bg-light text-dark',
+                                                        };
+                                                    @endphp
+                                                    <span class="badge rank-badge {{ $rankClass }}">
+                                                        @if($rank <= 3) <i class="bi bi-trophy-fill me-1"></i> @endif
+                                                        #{{ $rank }}
+                                                    </span>
                                                 </td>
 
                                                 <td>
@@ -327,27 +343,25 @@
                                                     <small class="text-muted">NIK: {{ $hasil->karyawan->nik }}</small>
                                                 </td>
 
-                                                <td>
-                                                    {{ $hasil->karyawan->jabatan ?? '-' }}
-                                                </td>
+                                                <td>{{ $hasil->karyawan->jabatan ?? '-' }}</td>
 
                                                 <td class="text-end fw-bold text-primary">
-                                                    @if($periodeAktif->status_validasi == 'divalidasi')
-                                                        {{ number_format($hasil->nilai_total, 2) }}
-                                                    @else
-                                                        <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">Menunggu
-                                                            Validasi</span>
-                                                    @endif
+                                                    {{ number_format($hasil->nilai_total, 2) }}
                                                 </td>
 
                                                 <td class="text-center">
-                                                    @if($periodeAktif->status_validasi == 'divalidasi')
-                                                        <span class="badge bg-{{ $hasil->klasifikasi_badge }}">
-                                                            {{ $hasil->klasifikasi }}
-                                                        </span>
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
+                                                    @php
+                                                        $kelasColor = match($hasil->klasifikasi) {
+                                                            'A' => 'success',
+                                                            'B' => 'primary',
+                                                            'C' => 'warning',
+                                                            'D' => 'danger',
+                                                            default => 'secondary',
+                                                        };
+                                                    @endphp
+                                                    <span class="badge bg-{{ $kelasColor }}">
+                                                        {{ $hasil->klasifikasi }}
+                                                    </span>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -427,6 +441,14 @@
                 <div class="quick-title">Cetak Laporan</div>
                 <p class="quick-desc">Cetak laporan hasil penilaian dalam format PDF.</p>
             </a>
+        @elseif($periodeAktif->status_validasi == 'ditolak')
+            <div class="quick-card opacity-50 border-danger">
+                <div class="quick-icon bg-danger">
+                    <i class="bi bi-shield-x"></i>
+                </div>
+                <div class="quick-title text-danger">Cetak Laporan</div>
+                <p class="quick-desc text-danger">Laporan ditolak oleh Direktur.</p>
+            </div>
         @else
             <div class="quick-card opacity-50">
                 <div class="quick-icon bg-warning">
