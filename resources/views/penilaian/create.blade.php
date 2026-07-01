@@ -416,12 +416,12 @@
 
                                                     <input type="number" class="form-control nilai-input"
                                                         name="penilaian[{{ $subKriteria->id }}]" id="nilai_{{ $subKriteria->id }}"
-                                                        min="0" max="20" value="{{ $nilaiLama }}" placeholder="0-20" required>
+                                                        min="0" max="20" value="{{ $nilaiLama }}" placeholder="0-20" required {{ $isReadOnly ? 'disabled' : '' }}>
 
                                                     <div class="d-flex justify-content-between align-items-center mt-2">
                                                         <small class="text-muted">0 sampai 20</small>
 
-                                                        @if($targetIdeal !== '')
+                                                        @if($targetIdeal !== '' && !$isReadOnly)
                                                             <button type="button" class="btn btn-outline-primary btn-sm quick-target"
                                                                 data-target="{{ $targetIdeal }}"
                                                                 data-input="nilai_{{ $subKriteria->id }}">
@@ -448,14 +448,21 @@
                     </div>
 
                     <div class="form-footer">
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between align-items-center">
                             <a href="{{ route('penilaian.index') }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left me-1"></i>Kembali
                             </a>
 
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save me-1"></i>Simpan Penilaian
-                            </button>
+                            @if($isReadOnly)
+                                <div class="alert alert-warning mb-0 py-2 px-3 small d-flex align-items-center gap-2">
+                                    <i class="bi bi-lock-fill"></i>
+                                    <span>Penilaian dikunci karena laporan sudah disetujui Direktur.</span>
+                                </div>
+                            @else
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-1"></i>Simpan Penilaian
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </div>

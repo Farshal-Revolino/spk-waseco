@@ -320,22 +320,31 @@
                                     </thead>
 
                                     <tbody>
+                                        @php
+                                            $showValues = ($periodeAktif && $periodeAktif->status_validasi === 'divalidasi') || (auth()->user() && auth()->user()->role === 'direktur');
+                                        @endphp
                                         @foreach($topKaryawan as $hasil)
                                             <tr>
                                                 <td>
-                                                    @php
-                                                        $rank = $hasil->ranking ?? $loop->iteration;
-                                                        $rankClass = match(true) {
-                                                            $rank == 1 => 'bg-warning text-dark',
-                                                            $rank == 2 => 'bg-secondary text-white',
-                                                            $rank == 3 => 'bg-danger text-white',
-                                                            default    => 'bg-light text-dark',
-                                                        };
-                                                    @endphp
-                                                    <span class="badge rank-badge {{ $rankClass }}">
-                                                        @if($rank <= 3) <i class="bi bi-trophy-fill me-1"></i> @endif
-                                                        #{{ $rank }}
-                                                    </span>
+                                                    @if($showValues)
+                                                        @php
+                                                            $rank = $hasil->ranking ?? $loop->iteration;
+                                                            $rankClass = match(true) {
+                                                                $rank == 1 => 'bg-warning text-dark',
+                                                                $rank == 2 => 'bg-secondary text-white',
+                                                                $rank == 3 => 'bg-danger text-white',
+                                                                default    => 'bg-light text-dark',
+                                                            };
+                                                        @endphp
+                                                        <span class="badge rank-badge {{ $rankClass }}">
+                                                            @if($rank <= 3) <i class="bi bi-trophy-fill me-1"></i> @endif
+                                                            #{{ $rank }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge rank-badge bg-light text-muted" title="Menunggu Validasi/Ditolak">
+                                                            <i class="bi bi-lock-fill"></i>
+                                                        </span>
+                                                    @endif
                                                 </td>
 
                                                 <td>
@@ -346,22 +355,32 @@
                                                 <td>{{ $hasil->karyawan->jabatan ?? '-' }}</td>
 
                                                 <td class="text-end fw-bold text-primary">
-                                                    {{ number_format($hasil->nilai_total, 2) }}
+                                                    @if($showValues)
+                                                        {{ number_format($hasil->nilai_total, 2) }}
+                                                    @else
+                                                        <span class="text-muted small" title="Menunggu Validasi/Ditolak"><i class="bi bi-lock-fill"></i></span>
+                                                    @endif
                                                 </td>
 
                                                 <td class="text-center">
-                                                    @php
-                                                        $kelasColor = match($hasil->klasifikasi) {
-                                                            'A' => 'success',
-                                                            'B' => 'primary',
-                                                            'C' => 'warning',
-                                                            'D' => 'danger',
-                                                            default => 'secondary',
-                                                        };
-                                                    @endphp
-                                                    <span class="badge bg-{{ $kelasColor }}">
-                                                        {{ $hasil->klasifikasi }}
-                                                    </span>
+                                                    @if($showValues)
+                                                        @php
+                                                            $kelasColor = match($hasil->klasifikasi) {
+                                                                'A' => 'success',
+                                                                'B' => 'primary',
+                                                                'C' => 'warning',
+                                                                'D' => 'danger',
+                                                                default => 'secondary',
+                                                            };
+                                                        @endphp
+                                                        <span class="badge bg-{{ $kelasColor }}">
+                                                            {{ $hasil->klasifikasi }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-secondary" title="Menunggu Validasi/Ditolak">
+                                                            <i class="bi bi-lock-fill"></i>
+                                                        </span>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforeach

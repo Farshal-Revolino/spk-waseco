@@ -224,22 +224,39 @@
                                     </div>
                                 @endforeach
                             </div>
-
-                            <hr>
-
-                            <div class="mt-3">
-                                <h6 class="fw-bold mb-3">Keterangan Tambahan:</h6>
-                                <p class="text-muted small">
-                                    Hasil di atas dihitung secara sistematis menggunakan metode **Profile Matching** berdasarkan kriteria yang telah ditentukan. Anda dapat meninjau lembar laporan lengkap dalam format PDF melalui tombol pratinjau sebelum mengambil keputusan validasi resmi.
-                                </p>
-                            </div>
                         @else
-                            <div class="text-center py-5 text-muted">
-                                <i class="bi bi-clipboard-x fs-1 mb-3 d-block"></i>
-                                <h6>Hasil perhitungan belum dikalkulasi oleh HRD.</h6>
-                                <p class="small mb-0">Menu validasi akan aktif setelah HRD memproses data penilaian pada sistem.</p>
+                            <div class="alert alert-info py-3 text-center mb-4">
+                                <i class="bi bi-info-circle fs-3 mb-2 d-block text-primary"></i>
+                                <h6 class="fw-bold mb-1">Hasil Perhitungan Belum Dikalkulasi</h6>
+                                <p class="small mb-0 text-muted">HRD telah menginput nilai baru tetapi belum memproses perhitungan akhir.</p>
                             </div>
                         @endif
+
+                        <hr>
+
+                        <div class="mt-3">
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-people-fill text-primary me-2"></i>
+                                Karyawan yang Dinilai ({{ $karyawanTelahDinilai->count() }}):
+                            </h6>
+                            @if($karyawanTelahDinilai->isNotEmpty())
+                                <div class="list-group" style="max-height: 250px; overflow-y: auto; border-radius: 14px;">
+                                    @foreach($karyawanTelahDinilai as $karyawan)
+                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2 border-0 bg-light mb-2 rounded shadow-sm">
+                                            <div>
+                                                <div class="fw-bold text-dark" style="font-size: 13px;">{{ $karyawan->nama }}</div>
+                                                <small class="text-muted" style="font-size: 11px;">NIK: {{ $karyawan->nik }} | {{ $karyawan->jabatan ?? '-' }}</small>
+                                            </div>
+                                            <span class="badge bg-success rounded-pill" style="font-size: 10px;">Dinilai</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="alert alert-warning p-2 small mb-0">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Belum ada karyawan yang selesai dinilai untuk periode ini.
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>

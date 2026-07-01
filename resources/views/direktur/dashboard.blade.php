@@ -244,6 +244,23 @@
         </div>
     </div>
 
+    @if($karyawanPerluValidasiCount > 0)
+        <div class="alert alert-warning shadow-sm mb-4 d-flex align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="fs-3 text-warning"><i class="bi bi-exclamation-circle-fill"></i></div>
+                <div>
+                    <h6 class="alert-heading fw-bold mb-1">Karyawan yang Perlu Divalidasi</h6>
+                    <p class="mb-0 text-muted small">
+                        Terdapat <strong>{{ $karyawanPerluValidasiCount }}</strong> karyawan yang telah selesai dinilai pada periode aktif ini dan membutuhkan persetujuan/validasi laporan hasil penilaian Anda.
+                    </p>
+                </div>
+            </div>
+            <a href="{{ route('direktur.validasi') }}" class="btn btn-warning btn-sm text-dark fw-bold">
+                <i class="bi bi-shield-check me-1"></i>Validasi Sekarang
+            </a>
+        </div>
+    @endif
+
     <div class="row g-3 mb-4">
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card">

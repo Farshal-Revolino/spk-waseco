@@ -30,11 +30,28 @@ class DirekturDashboardController extends Controller
 
         $statusValidasi = $validasi->status_validasi ?? 'menunggu';
 
+        $karyawanPerluValidasiCount = 0;
+        if ($periode && $statusValidasi === 'menunggu') {
+            $totalSubKriteria = \App\Models\SubKriteria::count();
+            if ($totalSubKriteria > 0) {
+                $karyawanIdsWithAssessments = \App\Models\Penilaian::where('periode_id', $periode->id)
+                    ->select('karyawan_id')
+                    ->groupBy('karyawan_id')
+                    ->havingRaw('count(distinct sub_kriteria_id) >= ?', [$totalSubKriteria])
+                    ->pluck('karyawan_id');
+                
+                $karyawanPerluValidasiCount = \App\Models\Karyawan::where('status', 'aktif')
+                    ->whereIn('id', $karyawanIdsWithAssessments)
+                    ->count();
+            }
+        }
+
         return view('direktur.dashboard', compact(
             'periode',
             'hasilList',
             'validasi',
-            'statusValidasi'
+            'statusValidasi',
+            'karyawanPerluValidasiCount'
         ));
     }
 
@@ -44,6 +61,7 @@ class DirekturDashboardController extends Controller
 
         $hasilList = collect();
         $validasi = null;
+        $karyawanTelahDinilai = collect();
 
         if ($periode) {
             $hasilList = HasilPerhitungan::with('karyawan')
@@ -54,6 +72,19 @@ class DirekturDashboardController extends Controller
             $validasi = ValidasiHasil::with('user')
                 ->where('periode_id', $periode->id)
                 ->first();
+
+            $totalSubKriteria = \App\Models\SubKriteria::count();
+            if ($totalSubKriteria > 0) {
+                $karyawanIdsWithAssessments = \App\Models\Penilaian::where('periode_id', $periode->id)
+                    ->select('karyawan_id')
+                    ->groupBy('karyawan_id')
+                    ->havingRaw('count(distinct sub_kriteria_id) >= ?', [$totalSubKriteria])
+                    ->pluck('karyawan_id');
+                
+                $karyawanTelahDinilai = \App\Models\Karyawan::where('status', 'aktif')
+                    ->whereIn('id', $karyawanIdsWithAssessments)
+                    ->get();
+            }
         }
 
         $statusValidasi = $validasi->status_validasi ?? 'menunggu';
@@ -62,7 +93,8 @@ class DirekturDashboardController extends Controller
             'periode',
             'hasilList',
             'validasi',
-            'statusValidasi'
+            'statusValidasi',
+            'karyawanTelahDinilai'
         ));
     }
 }

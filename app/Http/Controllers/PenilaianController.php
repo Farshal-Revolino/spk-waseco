@@ -56,7 +56,9 @@ class PenilaianController extends Controller
             ->get()
             ->keyBy('sub_kriteria_id');
 
-        return view('penilaian.create', compact('karyawan', 'kriteriaList', 'periodeAktif', 'existingPenilaian'));
+        $isReadOnly = ($periodeAktif->status_validasi === 'divalidasi');
+
+        return view('penilaian.create', compact('karyawan', 'kriteriaList', 'periodeAktif', 'existingPenilaian', 'isReadOnly'));
     }
 
     public function store(Request $request)
@@ -66,6 +68,11 @@ class PenilaianController extends Controller
         if (!$periodeAktif) {
             return redirect()->route('penilaian.index')
                 ->with('error', 'Tidak ada periode penilaian aktif');
+        }
+
+        if ($periodeAktif->status_validasi === 'divalidasi') {
+            return redirect()->route('penilaian.index')
+                ->with('error', 'Penilaian tidak dapat diubah karena laporan periode aktif sudah disetujui/divalidasi oleh Direktur.');
         }
 
         $request->validate([

@@ -256,6 +256,18 @@
             $totalBelum = $totalKaryawan - $totalSelesai;
         @endphp
 
+        @if($periodeAktif->status_validasi === 'divalidasi')
+            <div class="alert alert-info shadow-sm mb-4 d-flex align-items-center gap-3">
+                <div class="fs-3 text-info"><i class="bi bi-lock-fill"></i></div>
+                <div>
+                    <h6 class="alert-heading fw-bold mb-1">Penilaian Terkunci (Laporan Sudah Disetujui Direktur Utama)</h6>
+                    <p class="mb-0 text-muted small">
+                        Laporan hasil penilaian untuk periode <strong>{{ $periodeAktif->nama }}</strong> telah divalidasi dan disetujui oleh Direktur Utama. Penilaian karyawan dikunci dan tidak dapat diubah kembali demi integritas data.
+                    </p>
+                </div>
+            </div>
+        @endif
+
         <div class="page-hero">
             <div class="row align-items-center">
                 <div class="col-md-8">
@@ -447,20 +459,27 @@
                                         </td>
 
                                         <td class="text-center">
-                                            @if($k->is_complete)
+                                            @if($periodeAktif->status_validasi === 'divalidasi')
                                                 <a href="{{ route('penilaian.create') }}?karyawan_id={{ $k->id }}"
-                                                    class="btn btn-warning btn-sm action-btn">
-                                                    <i class="bi bi-pencil-square me-1"></i>Edit
+                                                    class="btn btn-info btn-sm action-btn text-white">
+                                                    <i class="bi bi-eye me-1"></i>Lihat
                                                 </a>
                                             @else
-                                                <a href="{{ route('penilaian.create') }}?karyawan_id={{ $k->id }}"
-                                                    class="btn btn-primary btn-sm action-btn">
-                                                    @if($k->progress > 0)
-                                                        <i class="bi bi-arrow-repeat me-1"></i>Lanjutkan
-                                                    @else
-                                                        <i class="bi bi-plus-circle me-1"></i>Mulai
-                                                    @endif
-                                                </a>
+                                                @if($k->is_complete)
+                                                    <a href="{{ route('penilaian.create') }}?karyawan_id={{ $k->id }}"
+                                                        class="btn btn-warning btn-sm action-btn">
+                                                        <i class="bi bi-pencil-square me-1"></i>Edit
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('penilaian.create') }}?karyawan_id={{ $k->id }}"
+                                                        class="btn btn-primary btn-sm action-btn">
+                                                        @if($k->progress > 0)
+                                                            <i class="bi bi-arrow-repeat me-1"></i>Lanjutkan
+                                                        @else
+                                                            <i class="bi bi-plus-circle me-1"></i>Mulai
+                                                        @endif
+                                                    </a>
+                                                @endif
                                             @endif
                                         </td>
                                     </tr>
